@@ -893,7 +893,7 @@ export default function Page() {
 														<span className="ml-1 text-[13px] font-medium opacity-50">{timeInfo}</span>
 													</h3>
 												) : null}
-												<div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-5 max-[500px]:grid-cols-2 max-[500px]:gap-3">
+												<div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-4 md:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] md:gap-5 max-[640px]:grid-cols-2 max-[640px]:gap-3">
 													{sessionCards.map((card) => (
 														<MemberCard card={card} key={card.id} />
 													))}
