@@ -724,7 +724,7 @@ export default function Page() {
 
 			{categoryKeys.length ? (
 				<>
-					<section className="mb-6 grid gap-3 rounded-[1.75rem] border border-white/10 bg-white/6 p-3 backdrop-blur sm:gap-4 sm:p-4 md:grid-cols-2 xl:grid-cols-[1.3fr_2.5fr_1.2fr_1.2fr]">
+					<section className="mb-6 grid gap-3 rounded-[1.75rem] border border-white/10 bg-white/6 p-3 backdrop-blur sm:gap-4 sm:p-4 md:grid-cols-2 xl:grid-cols-[1.15fr_2.3fr_1.15fr_auto]">
 						<label className="flex min-w-0 flex-col gap-2 text-sm font-semibold sm:text-[0.95rem]">
 							<span>🎯 Select Category:</span>
 							<select
@@ -775,22 +775,30 @@ export default function Page() {
 							/>
 						</label>
 
-						<label className="mt-1 flex min-h-11 min-w-0 items-center gap-3 rounded-xl border border-white/12 bg-slate-950/50 px-3 py-3 text-sm font-semibold sm:text-[0.95rem]">
-							<input
-								checked={availableOnly}
-								className="h-4 w-4"
-								onChange={(event) => setAvailableOnly(event.target.checked)}
-								type="checkbox"
-							/>
-							🟢 Available Only
+						<label className="mt-1 flex min-h-11 min-w-0 items-center justify-between gap-3 rounded-xl border border-white/12 bg-slate-950/50 px-3 py-3 text-sm font-semibold sm:justify-self-end sm:text-[0.95rem] xl:min-w-[220px]">
+							<div className="min-w-0">
+								<div className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300/75">View Filter</div>
+								<div className="truncate text-sm text-white">Available only</div>
+							</div>
+							<span className="relative inline-flex shrink-0 items-center">
+								<input
+									checked={availableOnly}
+									className="peer sr-only"
+									onChange={(event) => setAvailableOnly(event.target.checked)}
+									type="checkbox"
+								/>
+								<span className="h-7 w-12 rounded-full border border-white/12 bg-slate-900/90 transition-colors peer-checked:bg-emerald-500/25 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-300/80 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-slate-950">
+									<span className="mt-[3px] ml-[3px] block size-5 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.25)] transition-transform peer-checked:translate-x-5 peer-checked:bg-emerald-300" />
+								</span>
+							</span>
 						</label>
 					</section>
 
 					{currentEvent ? (
 						<>
 							<section className="mb-3">
-								<h2 className="text-2xl font-bold">{currentEvent.title ?? "Event"}</h2>
-								<p className="mt-1 text-sm text-white/70">
+								<h2 className="text-2xl font-bold tracking-[-0.03em] sm:text-[2rem]">{currentEvent.title ?? "Event"}</h2>
+								<p className="mt-1 text-sm text-white/70 sm:text-[0.95rem]">
 									<strong>Category:</strong> {(currentEvent.category ?? "-").replaceAll("_", " ")} |{" "}
 									<strong>Price:</strong> IDR {(currentEvent.default_price ?? 0).toLocaleString("id-ID")}
 								</p>
@@ -808,20 +816,47 @@ export default function Page() {
 								<p className="mb-4 text-sm text-white/65">🔄 Live Data - Last Updated: {formatTime(nowWib)} WIB</p>
 							)}
 
-							<section className="mb-6 grid gap-4 md:grid-cols-3">
-								<div className="rounded-2xl border border-white/10 bg-white/6 p-4">
-									<div className="text-sm text-white/60">🎟️ Total Tickets</div>
-									<div className="mt-2 text-3xl font-extrabold">{metrics.totalTickets.toLocaleString("id-ID")}</div>
+							<section className="mb-6 grid gap-3 md:grid-cols-3 sm:gap-4">
+								<div className="rounded-[1.6rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+									<div className="flex items-center justify-between gap-3">
+										<div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">Total Tickets</div>
+										<div className="text-xs text-rose-300">🎟️</div>
+									</div>
+									<div className="mt-3 text-[2rem] font-extrabold leading-none tracking-[-0.04em] sm:text-[2.3rem]">{metrics.totalTickets.toLocaleString("id-ID")}</div>
+									<div className="mt-4 h-1 w-full rounded-full bg-white/5">
+										<div className="h-1 w-[100%] rounded-full bg-rose-400/70" />
+									</div>
 								</div>
-								<div className="rounded-2xl border border-white/10 bg-white/6 p-4">
-									<div className="text-sm text-white/60">📦 Remaining</div>
-									<div className="mt-2 text-3xl font-extrabold">{metrics.remaining.toLocaleString("id-ID")}</div>
+								<div className="rounded-[1.6rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+									<div className="flex items-center justify-between gap-3">
+										<div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">Remaining</div>
+										<div className="text-xs text-emerald-300">📦</div>
+									</div>
+									<div className="mt-3 text-[2rem] font-extrabold leading-none tracking-[-0.04em] sm:text-[2.3rem]">{metrics.remaining.toLocaleString("id-ID")}</div>
+									<div className="mt-4 h-1 w-full rounded-full bg-white/5">
+										<div
+											className="h-1 rounded-full bg-emerald-400/75"
+											style={{ width: `${Math.max(6, Math.min(100, (metrics.remaining / Math.max(metrics.totalTickets, 1)) * 100))}%` }}
+										/>
+									</div>
 								</div>
-								<div className="rounded-2xl border border-white/10 bg-white/6 p-4">
-									<div className="text-sm text-white/60">🔥 Sold Rate</div>
-									<div className="mt-2 text-3xl font-extrabold">{metrics.soldRate.toFixed(1)}%</div>
+								<div className="rounded-[1.6rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+									<div className="flex items-center justify-between gap-3">
+										<div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">Sold Rate</div>
+										<div className="text-xs text-amber-300">🔥</div>
+									</div>
+									<div className="mt-3 text-[2rem] font-extrabold leading-none tracking-[-0.04em] sm:text-[2.3rem]">{metrics.soldRate.toFixed(1)}%</div>
+									<div className="mt-4 h-1 w-full rounded-full bg-white/5">
+										<div className="h-1 rounded-full bg-amber-400/75" style={{ width: `${Math.max(6, metrics.soldRate)}%` }} />
+									</div>
 								</div>
 							</section>
+
+							{availableOnly && cards.length ? (
+								<div className="mb-4 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-50">
+									Showing only lanes with tickets still available.
+								</div>
+							) : null}
 
 							{isSearchMode && cards.length ? (
 								<div className="mb-4 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm text-emerald-50">
