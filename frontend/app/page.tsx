@@ -771,61 +771,48 @@ export default function Page() {
 						</label>
 
 						<label className="flex min-w-0 flex-col gap-2 text-sm font-semibold sm:text-[0.95rem]">
-							<span>🔍 Search Name/Nickname...</span>
+							<span className="block truncate whitespace-nowrap">🔍 Search member...</span>
 							<input
 								className="min-h-11 w-full min-w-0 rounded-xl border border-white/12 bg-slate-950/70 px-3 py-2 text-sm outline-none sm:text-base"
 								onChange={(event) => {
 									setSearchQuery(event.target.value);
 									setSelectedDate("");
 								}}
-								placeholder="Type Michie, Gracie..."
+								placeholder="Type member name..."
 								value={searchQuery}
 							/>
 						</label>
 
-						<div className="mt-1 flex min-h-11 min-w-0 items-center gap-3 rounded-full border border-white/12 bg-slate-950/55 px-3 py-2.5 text-sm font-semibold sm:justify-self-end sm:text-[0.95rem] xl:min-w-[300px]">
+						<label className="mt-1 flex min-h-11 min-w-0 items-center gap-3 rounded-full border border-white/12 bg-slate-950/55 px-3 py-2.5 text-sm font-semibold sm:justify-self-end sm:text-[0.95rem] xl:min-w-[280px]">
 							<div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-emerald-400/18 bg-emerald-500/10 text-sm text-emerald-300">
 								●
 							</div>
 							<div className="min-w-0 flex-1">
 								<div className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300/75">Lane Filter</div>
-								<div className="truncate text-sm text-white">Choose what the board shows</div>
+								<div className="truncate text-sm text-white">Show available lanes only</div>
 							</div>
-							<div className="relative ml-auto grid h-10 w-[180px] shrink-0 grid-cols-2 rounded-full border border-white/10 bg-slate-900/95 p-1">
-								<span
-									aria-hidden="true"
-									className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-full transition-all duration-300 ease-out ${
-										availableOnly
-											? "translate-x-full bg-emerald-400 shadow-[0_4px_12px_rgba(16,185,129,0.22)]"
-											: "translate-x-0 bg-white shadow-[0_4px_12px_rgba(0,0,0,0.18)]"
-									}`}
+							<span className="relative ml-auto inline-flex shrink-0 items-center">
+								<input
+									checked={availableOnly}
+									className="peer sr-only"
+									onChange={(event) => setAvailableOnly(event.target.checked)}
+									type="checkbox"
 								/>
-								<button
-									aria-pressed={!availableOnly}
-									className={`relative z-10 min-h-9 rounded-full px-3 text-[11px] font-bold uppercase tracking-[0.14em] transition-colors duration-200 ${
-										!availableOnly
-											? "text-slate-950"
-											: "text-white/62 hover:text-white"
-									}`}
-									onClick={() => setAvailableOnly(false)}
-									type="button"
-								>
-									All lanes
-								</button>
-								<button
-									aria-pressed={availableOnly}
-									className={`relative z-10 min-h-9 rounded-full px-3 text-[11px] font-bold uppercase tracking-[0.14em] transition-colors duration-200 ${
-										availableOnly
-											? "text-slate-950"
-											: "text-white/62 hover:text-white"
-									}`}
-									onClick={() => setAvailableOnly(true)}
-									type="button"
-								>
-									Available
-								</button>
-							</div>
-						</div>
+								<span className="flex items-center gap-3 rounded-full border border-white/10 bg-slate-900/95 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white/70 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-300/80 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-slate-950">
+									<span className={`transition-colors ${availableOnly ? "text-emerald-200" : "text-white/45"}`}>Off</span>
+									<span className={`relative h-7 w-12 rounded-full border transition-colors ${
+										availableOnly ? "border-emerald-400/30 bg-emerald-500/25" : "border-white/12 bg-slate-800"
+									}`}>
+										<span
+											className={`absolute top-1/2 size-5 -translate-y-1/2 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.25)] transition-all duration-200 ${
+												availableOnly ? "left-[1.45rem] bg-emerald-200" : "left-1"
+											}`}
+										/>
+									</span>
+									<span className={`transition-colors ${availableOnly ? "text-white" : "text-white/45"}`}>On</span>
+								</span>
+							</span>
+						</label>
 					</section>
 
 					{currentEvent ? (
@@ -862,8 +849,8 @@ export default function Page() {
 								<div className="rounded-[1.6rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
 									<div className="flex items-start justify-between gap-3">
 										<div>
-											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/40">Board Capacity</div>
-											<div className="mt-1 text-xs text-white/55">Total tickets released</div>
+											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/40">Total Tickets</div>
+											<div className="mt-1 text-xs text-white/55">All tickets for this event</div>
 										</div>
 										<div className="text-xs text-rose-300">🎟️</div>
 									</div>
@@ -871,18 +858,18 @@ export default function Page() {
 										<div className="text-[2rem] font-extrabold leading-none tracking-[-0.05em] tabular-nums sm:text-[2.3rem]">
 											{metrics.totalTickets.toLocaleString("id-ID")}
 										</div>
-										<div className="pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">Live board</div>
+										<div className="pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">Event total</div>
 									</div>
 									<div className="mt-4 flex items-center gap-3">
 										<div className="h-px flex-1 bg-rose-400/60" />
-										<div className="text-[10px] font-medium text-white/45">session pool</div>
+										<div className="text-[10px] font-medium text-white/45">all sessions</div>
 									</div>
 								</div>
 								<div className="rounded-[1.6rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
 									<div className="flex items-start justify-between gap-3">
 										<div>
-											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/40">Seats Still Live</div>
-											<div className="mt-1 text-xs text-white/55">Available to claim now</div>
+											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/40">Tickets Left</div>
+											<div className="mt-1 text-xs text-white/55">Tickets you can still buy</div>
 										</div>
 										<div className="text-xs text-emerald-300">📦</div>
 									</div>
@@ -890,20 +877,20 @@ export default function Page() {
 										<div className="text-[2rem] font-extrabold leading-none tracking-[-0.05em] tabular-nums sm:text-[2.3rem]">
 											{metrics.remaining.toLocaleString("id-ID")}
 										</div>
-										<div className="pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300/70">open lanes</div>
+										<div className="pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300/70">still open</div>
 									</div>
 									<div className="mt-4 flex items-center gap-3">
 										<div className="h-px flex-1 bg-emerald-400/65" />
 										<div className="text-[10px] font-medium text-white/45">
-											{Math.round((metrics.remaining / Math.max(metrics.totalTickets, 1)) * 100)}% inventory
+											{Math.round((metrics.remaining / Math.max(metrics.totalTickets, 1)) * 100)}% left
 										</div>
 									</div>
 								</div>
 								<div className="rounded-[1.6rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
 									<div className="flex items-start justify-between gap-3">
 										<div>
-											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/40">Fill Velocity</div>
-											<div className="mt-1 text-xs text-white/55">How full the board already is</div>
+											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/40">Sold Rate</div>
+											<div className="mt-1 text-xs text-white/55">How many tickets are sold</div>
 										</div>
 										<div className="text-xs text-amber-300">🔥</div>
 									</div>
@@ -911,11 +898,11 @@ export default function Page() {
 										<div className="text-[2rem] font-extrabold leading-none tracking-[-0.05em] tabular-nums sm:text-[2.3rem]">
 											{metrics.soldRate.toFixed(1)}%
 										</div>
-										<div className="pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300/70">claim rate</div>
+										<div className="pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300/70">already sold</div>
 									</div>
 									<div className="mt-4 flex items-center gap-3">
 										<div className="h-px flex-1 bg-amber-400/65" />
-										<div className="text-[10px] font-medium text-white/45">{(100 - metrics.soldRate).toFixed(1)}% left</div>
+										<div className="text-[10px] font-medium text-white/45">{(100 - metrics.soldRate).toFixed(1)}% not sold</div>
 									</div>
 								</div>
 							</section>
