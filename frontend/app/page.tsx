@@ -679,40 +679,57 @@ export default function Page() {
 	return (
 		<main className="relative mx-auto w-full max-w-[1680px] px-3 py-4 text-[var(--text)] sm:px-5 sm:py-6 lg:px-8 lg:py-8 2xl:px-10">
 			<div className="absolute right-3 top-3 z-20 sm:right-5 sm:top-5 lg:right-8 lg:top-6">
-				<div className="relative inline-flex items-center rounded-full border border-[color:var(--border)] bg-[var(--toggle-rail)] p-1 shadow-[inset_0_1px_0_var(--highlight)] backdrop-blur">
-					<span
-						aria-hidden="true"
-						className={`pointer-events-none absolute top-1 bottom-1 w-9 rounded-full bg-[var(--toggle-thumb)] opacity-90 shadow-[0_8px_20px_rgba(49,31,86,0.16)] transition-all duration-300 ease-out ${
-							theme === "dark" ? "left-1" : "left-[2.75rem]"
-						}`}
-					/>
+				<div className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-elevated)]/80 p-1 shadow-[inset_0_1px_0_var(--highlight),0_10px_20px_rgba(49,31,86,0.08)] backdrop-blur-md">
 					<button
 						aria-label="Switch to dark theme"
 						aria-pressed={theme === "dark"}
 						title="Dark theme"
-						className={`relative z-10 inline-flex size-9 items-center justify-center rounded-full text-base transition ${
+						className={`inline-flex size-8 items-center justify-center rounded-full transition ${
 							theme === "dark"
-								? "text-[var(--bg)]"
+								? "bg-[var(--accent)] text-[var(--ribbon-available-text)] shadow-[0_6px_16px_rgba(49,31,86,0.16)]"
 								: "text-[var(--text-faint)] hover:text-[var(--text)]"
 						}`}
 						onClick={() => updateTheme("dark")}
 						type="button"
 					>
-						<span className={`${theme === "dark" ? "scale-110" : "scale-100"} transition-transform duration-300`}>☾</span>
+						<svg
+							aria-hidden="true"
+							className={`${theme === "dark" ? "scale-105" : "scale-100"} size-4 transition-transform duration-200`}
+							fill="none"
+							viewBox="0 0 24 24"
+						>
+							<path
+								d="M20.354 15.354A9 9 0 0 1 8.646 3.646a8.25 8.25 0 1 0 11.708 11.708Z"
+								fill="currentColor"
+							/>
+						</svg>
 					</button>
 					<button
 						aria-label="Switch to light theme"
 						aria-pressed={theme === "light"}
 						title="Light theme"
-						className={`relative z-10 inline-flex size-9 items-center justify-center rounded-full text-base transition ${
+						className={`inline-flex size-8 items-center justify-center rounded-full transition ${
 							theme === "light"
-								? "text-[var(--accent-strong)]"
+								? "bg-[var(--surface-strong)] text-[var(--accent-strong)] shadow-[0_6px_16px_rgba(49,31,86,0.12)]"
 								: "text-[var(--text-faint)] hover:text-[var(--text)]"
 						}`}
 						onClick={() => updateTheme("light")}
 						type="button"
 					>
-						<span className={`${theme === "light" ? "scale-110" : "scale-100"} transition-transform duration-300`}>☀</span>
+						<svg
+							aria-hidden="true"
+							className={`${theme === "light" ? "scale-105" : "scale-100"} size-4 transition-transform duration-200`}
+							fill="none"
+							viewBox="0 0 24 24"
+						>
+							<circle cx="12" cy="12" fill="currentColor" r="4.25" />
+							<path
+								d="M12 2.75v2.5M12 18.75v2.5M21.25 12h-2.5M5.25 12h-2.5M18.54 5.46l-1.77 1.77M7.23 16.77l-1.77 1.77M18.54 18.54l-1.77-1.77M7.23 7.23 5.46 5.46"
+								stroke="currentColor"
+								strokeLinecap="round"
+								strokeWidth="1.8"
+							/>
+						</svg>
 					</button>
 				</div>
 			</div>
