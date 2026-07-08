@@ -60,7 +60,7 @@ export function MemberCard({ card }: MemberCardProps) {
 					title={card.metaHtml.replace(/<br\s*\/?>/gi, " ").replace(/&nbsp;/g, " ")}
 				/>
 			</div>
-			<div className="relative mb-3 size-16 overflow-hidden rounded-full border-2 border-[color:var(--photo-border)] bg-white shadow-[0_4px_10px_rgba(0,0,0,0.15)] sm:mb-4 sm:size-[4.5rem] lg:mb-2.5 lg:size-[3.85rem]">
+			<div className="relative mb-3 size-16 overflow-hidden rounded-full border-2 border-[color:var(--photo-border)] bg-[var(--photo-bg)] shadow-[0_4px_10px_rgba(0,0,0,0.15)] sm:mb-4 sm:size-[4.5rem] lg:mb-2.5 lg:size-[3.85rem]">
 				{/* eslint-disable-next-line @next/next/no-img-element */}
 				<img
 					alt={`${card.memberName} JKT48 photo`}
@@ -77,7 +77,7 @@ export function MemberCard({ card }: MemberCardProps) {
 					width={74}
 				/>
 				{isInactive ? (
-					<div className={`absolute inset-0 ${isClosed ? "bg-slate-900/45" : "bg-white/30"}`} />
+					<div className={`absolute inset-0 ${isClosed ? "bg-[var(--overlay-closed)]" : "bg-[var(--overlay-sold)]"}`} />
 				) : null}
 			</div>
 			<div className="mb-2 line-clamp-2 min-h-[2.55rem] w-full text-sm font-bold leading-tight text-[var(--text)] sm:mb-3 sm:text-base lg:mb-1.5 lg:min-h-[2.2rem] lg:text-[0.92rem]">

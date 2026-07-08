@@ -677,7 +677,45 @@ export default function Page() {
 				: null;
 
 	return (
-		<main className="mx-auto w-full max-w-[1680px] px-3 py-4 text-[var(--text)] sm:px-5 sm:py-6 lg:px-8 lg:py-8 2xl:px-10">
+		<main className="relative mx-auto w-full max-w-[1680px] px-3 py-4 text-[var(--text)] sm:px-5 sm:py-6 lg:px-8 lg:py-8 2xl:px-10">
+			<div className="absolute right-3 top-3 z-20 sm:right-5 sm:top-5 lg:right-8 lg:top-6">
+				<div className="relative inline-flex items-center rounded-full border border-[color:var(--border)] bg-[var(--toggle-rail)] p-1 shadow-[inset_0_1px_0_var(--highlight)] backdrop-blur">
+					<span
+						aria-hidden="true"
+						className={`pointer-events-none absolute top-1 bottom-1 w-9 rounded-full bg-[var(--toggle-thumb)] opacity-90 shadow-[0_8px_20px_rgba(49,31,86,0.16)] transition-all duration-300 ease-out ${
+							theme === "dark" ? "left-1" : "left-[2.75rem]"
+						}`}
+					/>
+					<button
+						aria-label="Switch to dark theme"
+						aria-pressed={theme === "dark"}
+						title="Dark theme"
+						className={`relative z-10 inline-flex size-9 items-center justify-center rounded-full text-base transition ${
+							theme === "dark"
+								? "text-[var(--bg)]"
+								: "text-[var(--text-faint)] hover:text-[var(--text)]"
+						}`}
+						onClick={() => updateTheme("dark")}
+						type="button"
+					>
+						<span className={`${theme === "dark" ? "scale-110" : "scale-100"} transition-transform duration-300`}>☾</span>
+					</button>
+					<button
+						aria-label="Switch to light theme"
+						aria-pressed={theme === "light"}
+						title="Light theme"
+						className={`relative z-10 inline-flex size-9 items-center justify-center rounded-full text-base transition ${
+							theme === "light"
+								? "text-[var(--accent-strong)]"
+								: "text-[var(--text-faint)] hover:text-[var(--text)]"
+						}`}
+						onClick={() => updateTheme("light")}
+						type="button"
+					>
+						<span className={`${theme === "light" ? "scale-110" : "scale-100"} transition-transform duration-300`}>☀</span>
+					</button>
+				</div>
+			</div>
 			<header className="mb-6 border-b border-[color:var(--border)] pb-4 text-center sm:mb-8 sm:pb-5">
 				<h1 className="m-0 text-[2rem] font-extrabold tracking-[-0.04em] text-[var(--text)] sm:text-[2.65rem] lg:text-[3.25rem]">GLOBAL EXCLUSIVE MONITOR</h1>
 				<p className="mt-2 text-sm font-semibold text-[var(--text-muted)] sm:text-base lg:text-lg">Live Tracker for All JKT48 Exclusive Events</p>
@@ -702,38 +740,10 @@ export default function Page() {
 						🐙 Support via Tako
 					</a>
 				</div>
-				<div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
+				<div className="mt-4 flex items-center justify-center">
 					<div className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] px-4 py-2 text-[11px] font-bold tracking-[0.18em] text-[var(--accent)] sm:text-xs">
 						<span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" />
 						LIVE MONITORING
-					</div>
-					<div className="inline-flex items-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-1 shadow-[inset_0_1px_0_var(--highlight)]">
-						<button
-							aria-label="Switch to dark theme"
-							aria-pressed={theme === "dark"}
-							className={`inline-flex size-9 items-center justify-center rounded-full text-base transition ${
-								theme === "dark"
-									? "bg-[var(--accent)] text-[var(--ribbon-available-text)] shadow-[0_6px_18px_rgba(88,66,146,0.24)]"
-									: "text-[var(--text-faint)] hover:text-[var(--text)]"
-							}`}
-							onClick={() => updateTheme("dark")}
-							type="button"
-						>
-							☾
-						</button>
-						<button
-							aria-label="Switch to light theme"
-							aria-pressed={theme === "light"}
-							className={`inline-flex size-9 items-center justify-center rounded-full text-base transition ${
-								theme === "light"
-									? "bg-[var(--surface-strong)] text-[var(--accent)] shadow-[0_6px_18px_rgba(88,66,146,0.16)]"
-									: "text-[var(--text-faint)] hover:text-[var(--text)]"
-							}`}
-							onClick={() => updateTheme("light")}
-							type="button"
-						>
-							☀
-						</button>
 					</div>
 				</div>
 			</header>
@@ -850,8 +860,8 @@ export default function Page() {
 										availableOnly ? "border-[color:var(--accent-border)] bg-[color:var(--accent-soft)]" : "border-[color:var(--border)] bg-[color:var(--surface)]"
 									}`}>
 										<span
-											className={`absolute top-1/2 size-5 -translate-y-1/2 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.25)] transition-all duration-200 ${
-												availableOnly ? "left-[1.45rem] bg-[var(--accent)]" : "left-1 bg-[var(--text)]"
+											className={`absolute top-1/2 size-5 -translate-y-1/2 rounded-full bg-[var(--toggle-thumb)] shadow-[0_2px_8px_rgba(0,0,0,0.25)] transition-all duration-200 ${
+												availableOnly ? "left-[1.45rem] bg-[var(--accent)]" : "left-1"
 											}`}
 										/>
 									</span>
@@ -999,16 +1009,16 @@ export default function Page() {
 								<div id="laporan-container">
 									<div className="share-banner" id="share-banner">
 										<div>
-											<h3 className="m-0 text-sm font-extrabold">{(currentEvent.title ?? "JKT48 Exclusive Event").toUpperCase()}</h3>
-											<p className="m-0 text-[11px] font-semibold opacity-90">
+											<h3 className="m-0 text-sm font-extrabold text-[var(--accent-text)]">{(currentEvent.title ?? "JKT48 Exclusive Event").toUpperCase()}</h3>
+											<p className="m-0 text-[11px] font-semibold text-[var(--accent-text)] opacity-90">
 												{isSearchMode ? `🔍 ${searchQuery.trim().toUpperCase()}` : `📅 ${activeDate}`}
 											</p>
 										</div>
-										<div className="text-right">
-											<div className="rounded-full border border-white/20 bg-black/25 px-2.5 py-1 text-[11px] font-bold">
+										<div className="text-right text-[var(--accent-text)]">
+											<div className="rounded-full border border-[color:var(--share-chip-border)] bg-[color:var(--share-chip-bg)] px-2.5 py-1 text-[11px] font-bold">
 												⏱️ {formatDate(nowWib)} {formatTime(nowWib)} WIB
 											</div>
-											<div className="mt-1 text-[9px] font-bold tracking-[0.5px] opacity-80">LIVE TRACKER BY @ESTRELLAWIN19</div>
+											<div className="mt-1 text-[9px] font-bold tracking-[0.5px] text-[var(--accent-text)] opacity-80">LIVE TRACKER BY @ESTRELLAWIN19</div>
 										</div>
 									</div>
 
