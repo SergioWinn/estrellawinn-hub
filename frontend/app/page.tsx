@@ -4,6 +4,20 @@ import useSWR from "swr";
 import { useEffect, useMemo, useState } from "react";
 
 import { MemberCard, type MemberCardViewModel } from "@/src/components/MemberCard";
+import {
+	AlertIcon,
+	BoxIcon,
+	CalendarIcon,
+	CategoryIcon,
+	ClockIcon,
+	DotIcon,
+	FlameIcon,
+	PinIcon,
+	RefreshIcon,
+	SearchIcon,
+	SupportIcon,
+	TicketIcon,
+} from "@/src/components/UiIcons";
 
 interface ApiEnvelope<T> {
 	data: T;
@@ -95,9 +109,9 @@ const FALLBACK_IMAGE =
 	"data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
 const CATEGORY_LABELS: Record<string, string> = {
-	DIGITAL_PHOTOBOOK: "📱 Video Call",
-	TWO_SHOT: "📸 2-Shot",
-	PHOTOCARD: "🤝 Meet & Greet",
+	DIGITAL_PHOTOBOOK: "Video Call",
+	TWO_SHOT: "2-Shot",
+	PHOTOCARD: "Meet & Greet",
 };
 
 const FOCUSED_POLLING = {
@@ -541,7 +555,7 @@ export default function Page() {
 		const mapped = new Map<string, EventOption[]>();
 
 		for (const event of eventsData ?? []) {
-			const categoryLabel = CATEGORY_LABELS[event.category ?? ""] ?? "🎟️ Others";
+			const categoryLabel = CATEGORY_LABELS[event.category ?? ""] ?? "Others";
 			const eventLabel = `${formatDatePrefix(event.valid_date_from)}${event.title ?? "Unknown Event"}`;
 			const list = mapped.get(categoryLabel) ?? [];
 			list.push({ data: event, label: eventLabel });
@@ -658,6 +672,20 @@ export default function Page() {
 		return () => window.clearInterval(intervalId);
 	}, []);
 
+	useEffect(() => {
+		const restoredTheme = document.documentElement.dataset.theme === "light" ? "light" : "dark";
+
+		if (restoredTheme === theme) {
+			return;
+		}
+
+		const frameId = window.requestAnimationFrame(() => {
+			setTheme(restoredTheme);
+		});
+
+		return () => window.cancelAnimationFrame(frameId);
+	}, [theme]);
+
 	function updateTheme(nextTheme: ThemeMode) {
 		setTheme(nextTheme);
 		document.documentElement.dataset.theme = nextTheme;
@@ -754,7 +782,8 @@ export default function Page() {
 						rel="noreferrer"
 						target="_blank"
 					>
-						🐙 Support via Tako
+						<SupportIcon className="mr-2 size-4" />
+						Support via Tako
 					</a>
 				</div>
 				<div className="mt-4 flex items-center justify-center">
@@ -773,7 +802,7 @@ export default function Page() {
 							: "border border-[var(--sold)] bg-[color:var(--sold-soft)] text-[var(--sold-text)]"
 					}`}
 				>
-					{workerWaitingRoom ? "⚠️ " : ""}
+					{workerWaitingRoom ? <AlertIcon className="mr-2 inline size-4 align-[-2px]" /> : null}
 					{workerErrorMessage}
 				</div>
 			) : null}
@@ -807,7 +836,7 @@ export default function Page() {
 				<>
 					<section className="mb-6 grid gap-3 rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-3 backdrop-blur sm:gap-4 sm:p-4 md:grid-cols-2 xl:grid-cols-[1.05fr_2.25fr_1.15fr_auto]">
 						<label className="flex min-w-0 flex-col gap-2 text-sm font-semibold sm:text-[0.95rem]">
-							<span>🎯 Category</span>
+							<span className="inline-flex items-center gap-2"><CategoryIcon className="size-4 text-[var(--accent)]" />Category</span>
 							<select
 								className="min-h-11 w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 pr-10 text-sm text-[var(--text)] outline-none sm:text-base"
 								onChange={(event) => {
@@ -826,7 +855,7 @@ export default function Page() {
 						</label>
 
 						<label className="flex min-w-0 flex-col gap-2 text-sm font-semibold sm:text-[0.95rem]">
-							<span>📌 Event</span>
+							<span className="inline-flex items-center gap-2"><PinIcon className="size-4 text-[var(--sold)]" />Event</span>
 							<select
 								className="min-h-11 w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 pr-10 text-sm text-[var(--text)] outline-none sm:text-base"
 								onChange={(event) => {
@@ -844,7 +873,7 @@ export default function Page() {
 						</label>
 
 						<label className="flex min-w-0 flex-col gap-2 text-sm font-semibold sm:text-[0.95rem]">
-							<span className="block truncate whitespace-nowrap">🔍 Search member...</span>
+							<span className="block truncate whitespace-nowrap"><span className="inline-flex items-center gap-2"><SearchIcon className="size-4 text-[var(--accent)]" />Search member...</span></span>
 							<input
 								className="min-h-11 w-full min-w-0 rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 text-sm text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] sm:text-base"
 								onChange={(event) => {
@@ -858,7 +887,7 @@ export default function Page() {
 
 						<label className="mt-1 flex min-h-11 min-w-0 items-center gap-3 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-elevated)] px-3 py-2.5 text-sm font-semibold sm:justify-self-end sm:text-[0.95rem] xl:min-w-[280px]">
 							<div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] text-sm text-[var(--accent)]">
-								●
+								<DotIcon className="size-2.5" />
 							</div>
 							<div className="min-w-0 flex-1">
 								<div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--accent)]">Available Only</div>
@@ -900,7 +929,8 @@ export default function Page() {
 
 							{workerWaitingRoom ? (
 								<div className="mb-4 rounded-2xl border border-[var(--warn)] bg-[color:var(--warn-soft)] p-4 text-sm text-[var(--warn-text)]">
-									⚠️ Worker upstream is currently in Cloudflare Waiting Room / rate-limited. Showing last known good data in memory.
+									<AlertIcon className="mr-2 inline size-4 align-[-2px]" />
+									Worker upstream is currently in Cloudflare Waiting Room / rate-limited. Showing last known good data in memory.
 								</div>
 							) : detailError ? (
 								<div className="mb-4 rounded-2xl border border-[var(--sold)] bg-[color:var(--sold-soft)] p-4 text-sm text-[var(--sold-text)]">
@@ -908,11 +938,11 @@ export default function Page() {
 								</div>
 							) : (
 								<div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-[var(--text-muted)]">
-									<p className="m-0">🔄 Live now</p>
+									<p className="m-0 inline-flex items-center gap-2"><RefreshIcon className="size-4" />Live now</p>
 									<div
 										className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--accent-text)]"
 									>
-										<span className="size-2 rounded-full bg-[var(--accent)]" />
+										<DotIcon className="size-2.5 text-[var(--accent)]" />
 										{formatDate(nowWib)} {formatTime(nowWib)} WIB
 									</div>
 								</div>
@@ -925,7 +955,7 @@ export default function Page() {
 											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-faint)]">Total Tickets</div>
 											<div className="mt-1 text-xs text-[var(--text-muted)]">All tickets for this event</div>
 										</div>
-										<div className="text-xs text-[var(--sold)]">🎟️</div>
+										<div className="text-[var(--sold)]"><TicketIcon className="size-4" /></div>
 									</div>
 									<div className="mt-5 flex items-end justify-between gap-3">
 										<div className="text-[2rem] font-extrabold leading-none tracking-[-0.05em] text-[var(--text)] tabular-nums sm:text-[2.3rem]">
@@ -944,7 +974,7 @@ export default function Page() {
 											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-faint)]">Tickets Left</div>
 											<div className="mt-1 text-xs text-[var(--text-muted)]">Tickets you can still buy</div>
 										</div>
-										<div className="text-xs text-[var(--available)]">📦</div>
+										<div className="text-[var(--available)]"><BoxIcon className="size-4" /></div>
 									</div>
 									<div className="mt-5 flex items-end justify-between gap-3">
 										<div className="text-[2rem] font-extrabold leading-none tracking-[-0.05em] text-[var(--text)] tabular-nums sm:text-[2.3rem]">
@@ -963,7 +993,7 @@ export default function Page() {
 											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-faint)]">Sold Rate</div>
 											<div className="mt-1 text-xs text-[var(--text-muted)]">How many tickets are sold</div>
 										</div>
-										<div className="text-xs text-[var(--warn)]">🔥</div>
+										<div className="text-[var(--warn)]"><FlameIcon className="size-4" /></div>
 									</div>
 									<div className="mt-5 flex items-end justify-between gap-3">
 										<div className="text-[2rem] font-extrabold leading-none tracking-[-0.05em] text-[var(--text)] tabular-nums sm:text-[2.3rem]">
@@ -986,14 +1016,15 @@ export default function Page() {
 
 							{isSearchMode && cards.length ? (
 								<div className="mb-4 rounded-2xl border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] p-4 text-sm text-[var(--accent-text)]">
-									🔎 Showing all schedules for <strong>{searchQuery.trim().toUpperCase()}</strong> across dates.
+									<SearchIcon className="mr-2 inline size-4 align-[-2px]" />Showing all schedules for <strong>{searchQuery.trim().toUpperCase()}</strong> across dates.
 								</div>
 							) : null}
 
 							{!isSearchMode && dateKeys.length ? (
 								<section className="mb-4">
-									<div className="mb-3 text-sm font-semibold text-[var(--text-muted)]">
-										📅 Date: {dateKeys.length === 1 ? dateKeys[0] : ""}
+									<div className="mb-3 text-sm font-semibold text-[var(--text-muted)] inline-flex items-center gap-2">
+										<CalendarIcon className="size-4" />
+										<span>Date: {dateKeys.length === 1 ? dateKeys[0] : ""}</span>
 									</div>
 									{dateKeys.length > 1 ? (
 										<div className="flex flex-wrap gap-2">
@@ -1020,20 +1051,22 @@ export default function Page() {
 								<div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4 text-sm text-[var(--text-muted)]">
 									{isSearchMode
 										? `Member '${searchQuery.trim()}' not found in this event.`
-										: "🟢 All clear! No active tickets or available sessions right now."}
+										: "All clear. No active tickets or available sessions right now."}
 								</div>
 							) : (
 								<div id="laporan-container">
 									<div className="share-banner" id="share-banner">
 										<div>
 											<h3 className="m-0 text-sm font-extrabold text-[var(--accent-text)]">{(currentEvent.title ?? "JKT48 Exclusive Event").toUpperCase()}</h3>
-											<p className="m-0 text-[11px] font-semibold text-[var(--accent-text)] opacity-90">
-												{isSearchMode ? `🔍 ${searchQuery.trim().toUpperCase()}` : `📅 ${activeDate}`}
+											<p className="m-0 text-[11px] font-semibold text-[var(--accent-text)] opacity-90 inline-flex items-center gap-1.5">
+												{isSearchMode ? <SearchIcon className="size-3.5" /> : <CalendarIcon className="size-3.5" />}
+												<span>{isSearchMode ? searchQuery.trim().toUpperCase() : activeDate}</span>
 											</p>
 										</div>
 										<div className="text-right text-[var(--accent-text)]">
-											<div className="rounded-full border border-[color:var(--share-chip-border)] bg-[color:var(--share-chip-bg)] px-2.5 py-1 text-[11px] font-bold">
-												⏱️ {formatDate(nowWib)} {formatTime(nowWib)} WIB
+											<div className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--share-chip-border)] bg-[color:var(--share-chip-bg)] px-2.5 py-1 text-[11px] font-bold">
+												<ClockIcon className="size-3.5" />
+												<span>{formatDate(nowWib)} {formatTime(nowWib)} WIB</span>
 											</div>
 											<div className="mt-1 text-[9px] font-bold tracking-[0.5px] text-[var(--accent-text)] opacity-80">LIVE TRACKER BY @ESTRELLAWIN19</div>
 										</div>
