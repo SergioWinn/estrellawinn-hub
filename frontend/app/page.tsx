@@ -706,8 +706,8 @@ export default function Page() {
 
 	return (
 		<main className="relative mx-auto w-full max-w-[1680px] px-3 py-4 text-[var(--text)] sm:px-5 sm:py-6 lg:px-8 lg:py-8 2xl:px-10">
-			<div className="absolute right-3 top-3 z-20 sm:right-5 sm:top-5 lg:right-8 lg:top-6">
-				<div className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-elevated)]/80 p-1 shadow-[inset_0_1px_0_var(--highlight),0_10px_20px_rgba(49,31,86,0.08)] backdrop-blur-md">
+			<div className="mb-2 flex justify-end sm:absolute sm:right-5 sm:top-5 sm:z-20 sm:mb-0 lg:right-8 lg:top-6">
+				<div className="inline-flex scale-95 items-center gap-1 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-elevated)]/80 p-1 shadow-[inset_0_1px_0_var(--highlight),0_10px_20px_rgba(49,31,86,0.08)] backdrop-blur-md sm:scale-100">
 					<button
 						aria-label="Switch to dark theme"
 						aria-pressed={theme === "dark"}
