@@ -21,6 +21,9 @@ import {
 
 interface ApiEnvelope<T> {
 	data: T;
+	isStale?: boolean;
+	lastUpdated?: string;
+	queueStatus?: string;
 	status: boolean;
 }
 
@@ -89,14 +92,27 @@ interface EventMetrics {
 	totalTickets: number;
 }
 
+interface ErrorResponsePayload {
+	error?: boolean | string;
+	isStale?: boolean;
+	lastUpdated?: string;
+	message?: string;
+	queueStatus?: string;
+	status?: boolean | string;
+}
+
 type ThemeMode = "dark" | "light";
 
 class ApiError extends Error {
+	errorStatus?: string;
+	isWaitingRoom: boolean;
 	statusCode?: number;
 
-	constructor(message: string, statusCode?: number) {
+	constructor(message: string, statusCode?: number, errorStatus?: string) {
 		super(message);
 		this.name = "ApiError";
+		this.errorStatus = errorStatus;
+		this.isWaitingRoom = errorStatus === "waiting_room";
 		this.statusCode = statusCode;
 	}
 }
@@ -116,30 +132,51 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const FOCUSED_POLLING = {
 	refreshInterval: 3000,
+	keepPreviousData: true,
 	refreshWhenHidden: false,
 	revalidateOnFocus: true,
+	shouldRetryOnError: false,
 } as const;
 
-const fetcher = async <T,>(path: string): Promise<T> => {
-	const response = await fetch(`${API_BASE_URL}${path}`, {
-		cache: "no-store",
-	});
+const WAITING_ROOM_POLLING = {
+	...FOCUSED_POLLING,
+	refreshInterval: 30000,
+} as const;
 
-	const payload = (await response.json()) as T & {
-		error?: string;
-		message?: string;
-		status?: boolean;
-	};
-
-	if (!response.ok || payload.status === false) {
-		throw new ApiError(payload.message ?? payload.error ?? "Request failed", response.status);
+function parseJsonPayload<T>(bodyText: string): (T & ErrorResponsePayload) | null {
+	if (!bodyText.trim()) {
+		return null;
 	}
 
-	return payload;
-};
+	try {
+		return JSON.parse(bodyText) as T & ErrorResponsePayload;
+	} catch {
+		return null;
+	}
+}
+
+function looksLikeWaitingRoomResponse(response: Response, bodyText: string, payload: ErrorResponsePayload | null): boolean {
+	const bodyLower = bodyText.toLowerCase();
+	const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
+	const statusLabel = typeof payload?.status === "string" ? payload.status.toLowerCase() : "";
+	const errorLabel = typeof payload?.error === "string" ? payload.error.toLowerCase() : "";
+
+	if (statusLabel === "waiting_room" || errorLabel === "waiting_room") {
+		return true;
+	}
+
+	if (response.status === 429 || response.status === 503) {
+		return true;
+	}
+
+	return (
+		(contentType.includes("text/html") || bodyLower.includes("<html") || bodyLower.includes("<!doctype")) &&
+		(bodyLower.includes("waiting room") || bodyLower.includes("cloudflare") || bodyLower.includes("cf-waitingroom"))
+	);
+}
 
 function isWaitingRoomError(error: unknown): boolean {
-	return error instanceof ApiError && (error.statusCode === 429 || error.statusCode === 503);
+	return error instanceof ApiError && error.isWaitingRoom;
 }
 
 function getNowWib(): Date {
@@ -230,6 +267,33 @@ function formatTime(date: Date): string {
 	return `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}:${String(
 		date.getUTCSeconds(),
 	).padStart(2, "0")}`;
+}
+
+function parseWorkerTimestamp(value?: string): Date | null {
+	if (!value) {
+		return null;
+	}
+
+	const parsed = new Date(value);
+	if (Number.isNaN(parsed.getTime())) {
+		return null;
+	}
+
+	return new Date(parsed.getTime() + 7 * 60 * 60 * 1000);
+}
+
+function formatMinutesAgo(value?: string): string {
+	if (!value) {
+		return "";
+	}
+
+	const parsed = new Date(value);
+	if (Number.isNaN(parsed.getTime())) {
+		return "";
+	}
+
+	const diffMinutes = Math.max(0, Math.floor((Date.now() - parsed.getTime()) / 60000));
+	return diffMinutes <= 0 ? "baru saja" : `${diffMinutes} menit yang lalu`;
 }
 
 function formatDatePrefix(value?: string): string {
@@ -512,17 +576,52 @@ export default function Page() {
 	const [selectedDate, setSelectedDate] = useState("");
 	const [searchQuery, setSearchQuery] = useState("");
 	const [availableOnly, setAvailableOnly] = useState(false);
+	const [waitingRoomActive, setWaitingRoomActive] = useState(false);
+	const [eventListStale, setEventListStale] = useState(false);
+	const pollingOptions = waitingRoomActive ? WAITING_ROOM_POLLING : FOCUSED_POLLING;
+
+	const fetcher = async <T,>(path: string): Promise<T> => {
+		const response = await fetch(`${API_BASE_URL}${path}`, {
+			cache: "no-store",
+		});
+		const bodyText = await response.text();
+		const payload = parseJsonPayload<T>(bodyText);
+
+		if (looksLikeWaitingRoomResponse(response, bodyText, payload)) {
+			setWaitingRoomActive(true);
+			throw new ApiError(payload?.message ?? "Cloudflare Waiting Room is active.", 503, "waiting_room");
+		}
+
+		if (!payload) {
+			throw new ApiError("Worker returned a non-JSON response.", response.status);
+		}
+
+		if (!response.ok || payload.status === false) {
+			throw new ApiError(
+				payload.message ?? (typeof payload.error === "string" ? payload.error : "Request failed"),
+				response.status,
+				typeof payload.status === "string" ? payload.status : undefined,
+			);
+		}
+
+		if (payload.isStale || payload.queueStatus === "waiting_room") {
+			setWaitingRoomActive(true);
+		}
+		return payload;
+	};
 
 	const {
 		data: membersResponse,
 		error: membersError,
 		isLoading: membersLoading,
-	} = useSWR<ApiEnvelope<MemberRecord[]>>("/members", fetcher, FOCUSED_POLLING);
+		mutate: mutateMembers,
+	} = useSWR<ApiEnvelope<MemberRecord[]>>("/members", fetcher, pollingOptions);
 	const {
 		data: codesResponse,
 		error: codesError,
 		isLoading: codesLoading,
-	} = useSWR<ApiEnvelope<ExclusiveListItem[] | { data?: ExclusiveListItem[] }>>("/exclusives", fetcher, FOCUSED_POLLING);
+		mutate: mutateCodes,
+	} = useSWR<ApiEnvelope<ExclusiveListItem[] | { data?: ExclusiveListItem[] }>>("/exclusives", fetcher, pollingOptions);
 
 	const activeCodes = useMemo(() => {
 		const data = codesResponse?.data;
@@ -531,24 +630,26 @@ export default function Page() {
 		return codes.length ? codes : FALLBACK_CODES;
 	}, [codesResponse]);
 
-	const { data: eventsData, error: eventsError, isLoading: eventsLoading } = useSWR<EventDetail[]>(
+	const { data: eventsData, error: eventsError, isLoading: eventsLoading, mutate: mutateEvents } = useSWR<EventDetail[]>(
 		activeCodes.length ? ["event-list", ...activeCodes] : null,
 		async ([, ...codes]) => {
 			const results = await Promise.all(
 				codes.map(async (code) => {
 					try {
-						const detail = await fetcher<ApiEnvelope<EventDetail>>(`/exclusives/${code}`);
-						return detail.data;
+						return await fetcher<ApiEnvelope<EventDetail>>(`/exclusives/${code}`);
 					} catch {
 						return null;
 					}
 				}),
 			);
 
+			setEventListStale(results.some((event) => event?.isStale));
 			return results
-				.filter((event): event is EventDetail => event !== null && event.status !== false)
+				.filter((event): event is ApiEnvelope<EventDetail> => event !== null && event.status !== false)
+				.map((event) => event.data)
 				.sort(compareEventsByRecency);
 		},
+		pollingOptions,
 	);
 
 	const categories = useMemo(() => {
@@ -587,19 +688,25 @@ export default function Page() {
 		activeEventCode ? `/exclusives/${activeEventCode}` : null,
 		fetcher,
 		{
-			...FOCUSED_POLLING,
-			onSuccess: () => {
+			...pollingOptions,
+			onSuccess: (payload) => {
 				if (!activeEventCode) {
 					return;
 				}
 
-				setLastRefresh({ code: activeEventCode, timestamp: getNowWib() });
+				setLastRefresh({
+					code: activeEventCode,
+					timestamp: parseWorkerTimestamp(payload.lastUpdated) ?? getNowWib(),
+				});
 			},
 		},
 	);
+	const { mutate: mutateDetail } = detailSWR;
 
 	const currentEvent = detailSWR.data?.data ?? activeEvent;
 	const lastUpdatedWib = lastRefresh?.code === activeEventCode ? lastRefresh.timestamp : null;
+	const staleLastUpdated = detailSWR.data?.lastUpdated ?? codesResponse?.lastUpdated ?? membersResponse?.lastUpdated;
+	const staleMinutesAgo = formatMinutesAgo(staleLastUpdated);
 	const { nicknameMap, photoMap } = useMemo(
 		() => buildMemberMaps(membersResponse?.data ?? []),
 		[membersResponse?.data],
@@ -698,14 +805,29 @@ export default function Page() {
 	const pageError = membersError ?? codesError ?? eventsError;
 	const detailError = detailSWR.error;
 	const isLoading = membersLoading || codesLoading || eventsLoading;
-	const workerWaitingRoom = isWaitingRoomError(pageError) || isWaitingRoomError(detailError);
+	const hasStaleData = Boolean(
+		membersResponse?.isStale || codesResponse?.isStale || detailSWR.data?.isStale || eventListStale,
+	);
+	const workerWaitingRoom = waitingRoomActive || hasStaleData || isWaitingRoomError(pageError) || isWaitingRoomError(detailError);
 	const workerErrorMessage = workerWaitingRoom
-		? "Worker upstream is in Waiting Room / rate-limited. Retrying every 3 seconds while this tab is focused."
+		? `Menampilkan data terakhir${staleMinutesAgo ? ` (${staleMinutesAgo})` : ""}. Server sedang dalam antrian.`
 		: pageError
 			? `Failed to load worker data. ${String(pageError.message)}`
 			: detailError
 				? `Failed to refresh worker data. ${String(detailError.message)}`
 				: null;
+
+	useEffect(() => {
+		setWaitingRoomActive(hasStaleData || isWaitingRoomError(pageError) || isWaitingRoomError(detailError));
+	}, [detailError, detailSWR.data, eventListStale, hasStaleData, membersResponse, pageError, codesResponse]);
+
+	function retryAll() {
+		setWaitingRoomActive(false);
+		void mutateMembers();
+		void mutateCodes();
+		void mutateEvents();
+		void mutateDetail();
+	}
 
 	return (
 		<main className="relative mx-auto w-full max-w-[1680px] px-3 py-4 text-[var(--text)] sm:px-5 sm:py-6 lg:px-8 lg:py-8 2xl:px-10">
@@ -805,8 +927,19 @@ export default function Page() {
 							: "border border-[var(--sold)] bg-[color:var(--sold-soft)] text-[var(--sold-text)]"
 					}`}
 				>
-					{workerWaitingRoom ? <AlertIcon className="mr-2 inline size-4 align-[-2px]" /> : null}
-					{workerErrorMessage}
+					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+						<div>
+							{workerWaitingRoom ? <AlertIcon className="mr-2 inline size-4 align-[-2px]" /> : null}
+							{workerErrorMessage}
+						</div>
+						<button
+							className="inline-flex min-h-11 items-center justify-center rounded-full border border-current px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:opacity-85"
+							onClick={retryAll}
+							type="button"
+						>
+							{workerWaitingRoom ? "Retry now" : "Refresh now"}
+						</button>
+					</div>
 				</div>
 			) : null}
 
@@ -931,9 +1064,18 @@ export default function Page() {
 							</section>
 
 							{workerWaitingRoom ? (
-								<div className="mb-4 rounded-2xl border border-[var(--warn)] bg-[color:var(--warn-soft)] p-4 text-sm text-[var(--warn-text)]">
-									<AlertIcon className="mr-2 inline size-4 align-[-2px]" />
-									Worker upstream is currently in Cloudflare Waiting Room / rate-limited. Showing last known good data in memory.
+								<div className="mb-4 flex flex-col gap-3 rounded-2xl border border-[var(--warn)] bg-[color:var(--warn-soft)] p-4 text-sm text-[var(--warn-text)] sm:flex-row sm:items-center sm:justify-between">
+									<div>
+										<AlertIcon className="mr-2 inline size-4 align-[-2px]" />
+										Menampilkan data terakhir{staleMinutesAgo ? ` (${staleMinutesAgo})` : ""}. Server sedang dalam antrian.
+									</div>
+									<button
+										className="inline-flex min-h-11 items-center justify-center rounded-full border border-current px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:opacity-85"
+										onClick={retryAll}
+										type="button"
+									>
+										Retry now
+									</button>
 								</div>
 							) : detailError ? (
 								<div className="mb-4 rounded-2xl border border-[var(--sold)] bg-[color:var(--sold-soft)] p-4 text-sm text-[var(--sold-text)]">
