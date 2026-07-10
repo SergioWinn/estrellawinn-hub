@@ -681,7 +681,12 @@ export default function Page() {
 	const activeEvent = activeEventOption?.data;
 	const [nowWib, setNowWib] = useState(() => getNowWib());
 	const [lastRefresh, setLastRefresh] = useState<{ code: string; timestamp: Date } | null>(null);
-	const [theme, setTheme] = useState<ThemeMode | null>(null);
+	const [theme, setTheme] = useState<ThemeMode>(() =>
+		getInitialTheme({
+			datasetTheme: typeof document === "undefined" ? undefined : document.documentElement.dataset.theme,
+			storedTheme: typeof window === "undefined" ? null : window.localStorage.getItem(THEME_STORAGE_KEY),
+		}),
+	);
 
 	const activeEventCode = activeEvent?.code ?? null;
 	const detailSWR = useSWR<ApiEnvelope<EventDetail>>(
@@ -777,6 +782,10 @@ export default function Page() {
 	})();
 	const allCardsClosed = cards.length > 0 && cards.every((card) => card.status === "closed");
 	const ticketsLeftNotBuyable = closed || allCardsClosed;
+	const remainingMetricTitle = ticketsLeftNotBuyable ? "Quota Remaining" : "Tickets Left";
+	const remainingMetricDescription = ticketsLeftNotBuyable ? "Still listed in event data" : "Tickets you can still buy";
+	const remainingMetricStatusLabel = ticketsLeftNotBuyable ? "not buyable" : "still open";
+	const remainingMetricFooter = ticketsLeftNotBuyable ? "view-only signal" : "ready to buy";
 
 	useEffect(() => {
 		const intervalId = window.setInterval(() => {
@@ -784,15 +793,6 @@ export default function Page() {
 		}, 1000);
 
 		return () => window.clearInterval(intervalId);
-	}, []);
-
-	useEffect(() => {
-		setTheme(
-			getInitialTheme({
-				datasetTheme: document.documentElement.dataset.theme,
-				storedTheme: window.localStorage.getItem(THEME_STORAGE_KEY),
-			}),
-		);
 	}, []);
 
 	function updateTheme(nextTheme: ThemeMode) {
@@ -810,16 +810,13 @@ export default function Page() {
 	);
 	const workerWaitingRoom = waitingRoomActive || hasStaleData || isWaitingRoomError(pageError) || isWaitingRoomError(detailError);
 	const workerErrorMessage = workerWaitingRoom
-		? `Menampilkan data terakhir${staleMinutesAgo ? ` (${staleMinutesAgo})` : ""}. Server sedang dalam antrian.`
+		? `Showing the latest cached data${staleMinutesAgo ? ` (${staleMinutesAgo})` : ""}. The upstream queue is active.`
 		: pageError
 			? `Failed to load worker data. ${String(pageError.message)}`
 			: detailError
-				? `Failed to refresh worker data. ${String(detailError.message)}`
+				? `Unable to refresh live data. ${String(detailError.message)}`
 				: null;
-
-	useEffect(() => {
-		setWaitingRoomActive(hasStaleData || isWaitingRoomError(pageError) || isWaitingRoomError(detailError));
-	}, [detailError, detailSWR.data, eventListStale, hasStaleData, membersResponse, pageError, codesResponse]);
+	const showGlobalWorkerBanner = Boolean(workerErrorMessage && !currentEvent);
 
 	function retryAll() {
 		setWaitingRoomActive(false);
@@ -830,96 +827,88 @@ export default function Page() {
 	}
 
 	return (
-		<main className="relative mx-auto w-full max-w-[1680px] px-3 py-4 text-[var(--text)] sm:px-5 sm:py-6 lg:px-8 lg:py-8 2xl:px-10">
-			<div className="mb-2 flex justify-end sm:absolute sm:right-5 sm:top-5 sm:z-20 sm:mb-0 lg:right-8 lg:top-6">
-				<div className="inline-flex scale-95 items-center gap-1 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-elevated)]/80 p-1 shadow-[inset_0_1px_0_var(--highlight),0_10px_20px_rgba(49,31,86,0.08)] backdrop-blur-md sm:scale-100">
-					<button
-						aria-label="Switch to dark theme"
-						aria-pressed={theme === "dark"}
-						title="Dark theme"
-						className={`inline-flex size-8 items-center justify-center rounded-full transition ${
-							theme === "dark"
-								? "bg-[var(--accent)] text-[var(--ribbon-available-text)] shadow-[0_6px_16px_rgba(49,31,86,0.16)]"
-								: "text-[var(--text-faint)] hover:text-[var(--text)]"
-						}`}
-						onClick={() => updateTheme("dark")}
-						type="button"
-					>
-						<svg
-							aria-hidden="true"
-							className={`${theme === "dark" ? "scale-105" : "scale-100"} size-4 transition-transform duration-200`}
-							fill="none"
-							viewBox="0 0 24 24"
-						>
-							<path
-								d="M20.354 15.354A9 9 0 0 1 8.646 3.646a8.25 8.25 0 1 0 11.708 11.708Z"
-								fill="currentColor"
-							/>
-						</svg>
-					</button>
-					<button
-						aria-label="Switch to light theme"
-						aria-pressed={theme === "light"}
-						title="Light theme"
-						className={`inline-flex size-8 items-center justify-center rounded-full transition ${
-							theme === "light"
-								? "bg-[var(--surface-strong)] text-[var(--accent-strong)] shadow-[0_6px_16px_rgba(49,31,86,0.12)]"
-								: "text-[var(--text-faint)] hover:text-[var(--text)]"
-						}`}
-						onClick={() => updateTheme("light")}
-						type="button"
-					>
-						<svg
-							aria-hidden="true"
-							className={`${theme === "light" ? "scale-105" : "scale-100"} size-4 transition-transform duration-200`}
-							fill="none"
-							viewBox="0 0 24 24"
-						>
-							<circle cx="12" cy="12" fill="currentColor" r="4.25" />
-							<path
-								d="M12 2.75v2.5M12 18.75v2.5M21.25 12h-2.5M5.25 12h-2.5M18.54 5.46l-1.77 1.77M7.23 16.77l-1.77 1.77M18.54 18.54l-1.77-1.77M7.23 7.23 5.46 5.46"
-								stroke="currentColor"
-								strokeLinecap="round"
-								strokeWidth="1.8"
-							/>
-						</svg>
-					</button>
-				</div>
-			</div>
-			<header className="mb-6 border-b border-[color:var(--border)] pb-4 text-center sm:mb-8 sm:pb-5">
-				<h1 className="m-0 text-[2rem] font-extrabold tracking-[-0.04em] text-[var(--text)] sm:text-[2.65rem] lg:text-[3.25rem]">GLOBAL EXCLUSIVE MONITOR</h1>
-				<p className="mt-2 text-sm font-semibold text-[var(--text-muted)] sm:text-base lg:text-lg">Live Tracker for All JKT48 Exclusive Events</p>
-				<div className="mt-4 flex flex-col items-center justify-center gap-3 text-sm sm:flex-row">
-					<span className="text-[var(--text-muted)]">
-						Developed by{" "}
-						<a
-							className="font-bold text-[var(--accent)] hover:underline"
-							href="https://x.com/estrellawin19"
-							rel="noreferrer"
-							target="_blank"
-						>
-							@estrellawin19
-						</a>
-					</span>
-					<a
-						className="inline-flex min-h-11 items-center rounded-full bg-[var(--support)] px-4 py-2 text-xs font-bold text-[var(--support-text)] no-underline transition hover:-translate-y-px hover:bg-[var(--support-hover)]"
-						href="https://tako.id/Sportagame19Win"
-						rel="noreferrer"
-						target="_blank"
-					>
-						<SupportIcon className="mr-2 size-4" />
-						Support via Tako
-					</a>
-				</div>
-				<div className="mt-4 flex items-center justify-center">
-					<div className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] px-4 py-2 text-[11px] font-bold tracking-[0.18em] text-[var(--accent)] sm:text-xs">
-						<span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" />
-						LIVE MONITORING
+		<main className="relative mx-auto w-full max-w-[1680px] px-3 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-6 2xl:px-10">
+			<header className="mb-5 border-b border-[color:var(--border)] pb-4 sm:mb-6 sm:pb-5">
+				<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+					<div className="min-w-0 max-w-[58rem]">
+						<h1 className="m-0 text-[2rem] font-extrabold tracking-[-0.04em] text-[var(--text)] sm:text-[2.4rem] lg:text-[3rem]">
+							GLOBAL EXCLUSIVE MONITOR
+						</h1>
+						<p className="mt-2 max-w-[62ch] text-sm font-medium text-[var(--text-muted)] sm:text-[0.95rem] lg:text-base">
+							Track which JKT48 exclusive sessions are still actionable without digging through queue-heavy upstream pages.
+						</p>
 					</div>
+					<div className="flex justify-end sm:shrink-0">
+						<div className="inline-flex scale-95 items-center gap-1 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-elevated)]/80 p-1 shadow-[inset_0_1px_0_var(--highlight),0_10px_20px_rgba(49,31,86,0.08)] backdrop-blur-md sm:scale-100">
+							<button
+								aria-label="Switch to dark theme"
+								aria-pressed={theme === "dark"}
+								title="Dark theme"
+								className={`inline-flex size-8 items-center justify-center rounded-full transition ${
+									theme === "dark"
+										? "bg-[var(--accent)] text-[var(--ribbon-available-text)] shadow-[0_6px_16px_rgba(49,31,86,0.16)]"
+										: "text-[var(--text-faint)] hover:text-[var(--text)]"
+								}`}
+								onClick={() => updateTheme("dark")}
+								type="button"
+							>
+								<svg
+									aria-hidden="true"
+									className={`${theme === "dark" ? "scale-105" : "scale-100"} size-4 transition-transform duration-200`}
+									fill="none"
+									viewBox="0 0 24 24"
+								>
+									<path
+										d="M20.354 15.354A9 9 0 0 1 8.646 3.646a8.25 8.25 0 1 0 11.708 11.708Z"
+										fill="currentColor"
+									/>
+								</svg>
+							</button>
+							<button
+								aria-label="Switch to light theme"
+								aria-pressed={theme === "light"}
+								title="Light theme"
+								className={`inline-flex size-8 items-center justify-center rounded-full transition ${
+									theme === "light"
+										? "bg-[var(--surface-strong)] text-[var(--accent-strong)] shadow-[0_6px_16px_rgba(49,31,86,0.12)]"
+										: "text-[var(--text-faint)] hover:text-[var(--text)]"
+								}`}
+								onClick={() => updateTheme("light")}
+								type="button"
+							>
+								<svg
+									aria-hidden="true"
+									className={`${theme === "light" ? "scale-105" : "scale-100"} size-4 transition-transform duration-200`}
+									fill="none"
+									viewBox="0 0 24 24"
+								>
+									<circle cx="12" cy="12" fill="currentColor" r="4.25" />
+									<path
+										d="M12 2.75v2.5M12 18.75v2.5M21.25 12h-2.5M5.25 12h-2.5M18.54 5.46l-1.77 1.77M7.23 16.77l-1.77 1.77M18.54 18.54l-1.77-1.77M7.23 7.23 5.46 5.46"
+										stroke="currentColor"
+										strokeLinecap="round"
+										strokeWidth="1.8"
+									/>
+								</svg>
+							</button>
+						</div>
+					</div>
+				</div>
+				<div className="mt-4 flex flex-wrap items-center gap-2.5 text-sm text-[var(--text-muted)]">
+					<div className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--accent)] sm:text-xs">
+						<span className="size-2 rounded-full bg-[var(--accent)]" />
+						Refreshes every 3s
+					</div>
+					{currentEvent && !workerWaitingRoom && !detailError ? (
+						<div className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)] sm:text-xs">
+							<ClockIcon className="size-3.5 text-[var(--accent)]" />
+							{lastUpdatedWib ? `${formatDate(lastUpdatedWib)} ${formatTime(lastUpdatedWib)} WIB` : "Waiting for sync"}
+						</div>
+					) : null}
 				</div>
 			</header>
 
-			{workerErrorMessage ? (
+			{showGlobalWorkerBanner ? (
 				<div
 					className={`mb-4 rounded-2xl p-4 text-sm ${
 						workerWaitingRoom
@@ -1027,7 +1016,7 @@ export default function Page() {
 							</div>
 							<div className="min-w-0 flex-1">
 								<div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--accent)]">Available Only</div>
-								<div className="truncate text-sm text-[var(--text)]">Hide sold out lanes</div>
+							<div className="truncate text-sm text-[var(--text)]">Hide unavailable members</div>
 							</div>
 							<span className="relative ml-auto inline-flex shrink-0 items-center">
 								<input
@@ -1055,19 +1044,27 @@ export default function Page() {
 
 					{currentEvent ? (
 						<>
-							<section className="mb-3">
-								<h2 className="text-2xl font-bold tracking-[-0.03em] text-[var(--text)] sm:text-[2rem]">{currentEvent.title ?? "Event"}</h2>
-								<p className="mt-1 text-sm text-[var(--text-muted)] sm:text-[0.95rem]">
-									<strong>Category:</strong> {(currentEvent.category ?? "-").replaceAll("_", " ")} |{" "}
-									<strong>Price:</strong> IDR {(currentEvent.default_price ?? 0).toLocaleString("id-ID")}
-								</p>
+							<section className="mb-4">
+								<div className="min-w-0">
+									<h2 className="text-2xl font-bold tracking-[-0.03em] text-[var(--text)] sm:text-[2rem]">{currentEvent.title ?? "Event"}</h2>
+									<div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--text-muted)] sm:text-[0.95rem]">
+										<span className="inline-flex items-center gap-2">
+											<CategoryIcon className="size-4 text-[var(--accent)]" />
+											{(currentEvent.category ?? "-").replaceAll("_", " ")}
+										</span>
+										<span className="inline-flex items-center gap-2">
+											<TicketIcon className="size-4 text-[var(--sold)]" />
+											IDR {(currentEvent.default_price ?? 0).toLocaleString("id-ID")}
+										</span>
+									</div>
+								</div>
 							</section>
 
 							{workerWaitingRoom ? (
 								<div className="mb-4 flex flex-col gap-3 rounded-2xl border border-[var(--warn)] bg-[color:var(--warn-soft)] p-4 text-sm text-[var(--warn-text)] sm:flex-row sm:items-center sm:justify-between">
 									<div>
 										<AlertIcon className="mr-2 inline size-4 align-[-2px]" />
-										Menampilkan data terakhir{staleMinutesAgo ? ` (${staleMinutesAgo})` : ""}. Server sedang dalam antrian.
+										Showing the latest cached data{staleMinutesAgo ? ` (${staleMinutesAgo})` : ""}. The upstream queue is active.
 									</div>
 									<button
 										className="inline-flex min-h-11 items-center justify-center rounded-full border border-current px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:opacity-85"
@@ -1079,101 +1076,19 @@ export default function Page() {
 								</div>
 							) : detailError ? (
 								<div className="mb-4 rounded-2xl border border-[var(--sold)] bg-[color:var(--sold-soft)] p-4 text-sm text-[var(--sold-text)]">
-									Failed to refresh worker data. Showing last known good data in memory.
+									Unable to refresh live data. Showing the last successful snapshot.
 								</div>
-							) : (
-								<div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-[var(--text-muted)]">
-									<p className="m-0 inline-flex items-center gap-2"><ClockIcon className="size-4" />Last updated</p>
-									<div
-										className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--accent-text)]"
-									>
-										<DotIcon className="size-2.5 text-[var(--accent)]" />
-										{lastUpdatedWib ? `${formatDate(lastUpdatedWib)} ${formatTime(lastUpdatedWib)} WIB` : "Waiting for sync"}
-									</div>
-								</div>
-							)}
-
-							<section className="mb-6 grid gap-3 md:grid-cols-3 sm:gap-4">
-								<div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[linear-gradient(180deg,var(--surface),var(--surface-elevated))] p-4 shadow-[inset_0_1px_0_var(--highlight)]">
-									<div className="flex items-start justify-between gap-3">
-										<div>
-											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-faint)]">Total Tickets</div>
-											<div className="mt-1 text-xs text-[var(--text-muted)]">All tickets for this event</div>
-										</div>
-										<div className="text-[var(--sold)]"><TicketIcon className="size-4" /></div>
-									</div>
-									<div className="mt-5 flex items-end justify-between gap-3">
-										<div className="text-[2rem] font-extrabold leading-none tracking-[-0.05em] text-[var(--text)] tabular-nums sm:text-[2.3rem]">
-											{metrics.totalTickets.toLocaleString("id-ID")}
-										</div>
-										<div className="pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-faint)]">Event total</div>
-									</div>
-									<div className="mt-4 flex items-center gap-3">
-										<div className="h-px flex-1 bg-[var(--sold)]" />
-										<div className="text-[10px] font-medium text-[var(--text-faint)]">all sessions</div>
-									</div>
-								</div>
-								<div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[linear-gradient(180deg,var(--surface),var(--surface-elevated))] p-4 shadow-[inset_0_1px_0_var(--highlight)]">
-									<div className="flex items-start justify-between gap-3">
-										<div>
-											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-faint)]">Tickets Left</div>
-											<div className="mt-1 text-xs text-[var(--text-muted)]">
-												{ticketsLeftNotBuyable ? "Sales already closed" : "Tickets you can still buy"}
-											</div>
-										</div>
-										<div className={ticketsLeftNotBuyable ? "text-[var(--closed)]" : "text-[var(--available)]"}>
-											<BoxIcon className="size-4" />
-										</div>
-									</div>
-									<div className="mt-5 flex items-end justify-between gap-3">
-										<div className="text-[2rem] font-extrabold leading-none tracking-[-0.05em] text-[var(--text)] tabular-nums sm:text-[2.3rem]">
-											{metrics.remaining.toLocaleString("id-ID")}
-										</div>
-										<div
-											className={`pb-1 text-[10px] font-bold uppercase tracking-[0.2em] ${
-												ticketsLeftNotBuyable ? "text-[var(--closed)]" : "text-[var(--available)]"
-											}`}
-										>
-											{ticketsLeftNotBuyable ? "closed" : "still open"}
-										</div>
-									</div>
-									<div className="mt-4 flex items-center gap-3">
-										<div className={`h-px flex-1 ${ticketsLeftNotBuyable ? "bg-[var(--closed)]" : "bg-[var(--available)]"}`} />
-										<div className="text-[10px] font-medium text-[var(--text-faint)]">
-											{ticketsLeftNotBuyable ? "not available" : "ready to buy"}
-										</div>
-									</div>
-								</div>
-								<div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[linear-gradient(180deg,var(--surface),var(--surface-elevated))] p-4 shadow-[inset_0_1px_0_var(--highlight)]">
-									<div className="flex items-start justify-between gap-3">
-										<div>
-											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-faint)]">Sold Rate</div>
-											<div className="mt-1 text-xs text-[var(--text-muted)]">How many tickets are sold</div>
-										</div>
-										<div className="text-[var(--warn)]"><FlameIcon className="size-4" /></div>
-									</div>
-									<div className="mt-5 flex items-end justify-between gap-3">
-										<div className="text-[2rem] font-extrabold leading-none tracking-[-0.05em] text-[var(--text)] tabular-nums sm:text-[2.3rem]">
-											{metrics.soldRate.toFixed(1)}%
-										</div>
-										<div className="pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--warn)]">already sold</div>
-									</div>
-									<div className="mt-4 flex items-center gap-3">
-										<div className="h-px flex-1 bg-[var(--warn)]" />
-										<div className="text-[10px] font-medium text-[var(--text-faint)]">tickets not sold yet</div>
-									</div>
-								</div>
-							</section>
+							) : null}
 
 							{availableOnly && cards.length ? (
 								<div className="mb-4 rounded-2xl border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] p-4 text-sm text-[var(--accent-text)]">
-									Showing only lanes with tickets still available.
+									Showing only members with tickets still available.
 								</div>
 							) : null}
 
 							{isSearchMode && cards.length ? (
 								<div className="mb-4 rounded-2xl border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] p-4 text-sm text-[var(--accent-text)]">
-									<SearchIcon className="mr-2 inline size-4 align-[-2px]" />Showing all schedules for <strong>{searchQuery.trim().toUpperCase()}</strong> across dates.
+									<SearchIcon className="mr-2 inline size-4 align-[-2px]" />Showing <strong>{searchQuery.trim().toUpperCase()}</strong> across all dates.
 								</div>
 							) : null}
 
@@ -1181,7 +1096,7 @@ export default function Page() {
 								<section className="mb-4">
 									<div className="mb-3 text-sm font-semibold text-[var(--text-muted)] inline-flex items-center gap-2">
 										<CalendarIcon className="size-4" />
-										<span>Date: {dateKeys.length === 1 ? dateKeys[0] : ""}</span>
+										<span>Date: {dateKeys.length === 1 ? dateKeys[0] : "Choose a schedule"}</span>
 									</div>
 									{dateKeys.length > 1 ? (
 										<div className="flex flex-wrap gap-2">
@@ -1237,7 +1152,7 @@ export default function Page() {
 										);
 
 										return (
-											<section className="mb-6 sm:mb-7" key={`${sessionLabel}-${session.startTime}`}>
+											<section className="mb-6 first:mt-0 sm:mb-7" key={`${sessionLabel}-${session.startTime}`}>
 												{!isSearchMode ? (
 													<h3 className="mb-3 mt-1 text-sm font-semibold text-[var(--text)] sm:mb-4 sm:text-base lg:text-lg">
 														{sessionLabel}
@@ -1254,6 +1169,106 @@ export default function Page() {
 									})}
 								</div>
 							)}
+
+							<section className="mt-6 grid gap-3 border-t border-[color:var(--border)] pt-4 md:grid-cols-3 sm:gap-4 sm:pt-5">
+								<div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[linear-gradient(180deg,var(--surface),var(--surface-elevated))] p-4 shadow-[inset_0_1px_0_var(--highlight)]">
+									<div className="flex items-start justify-between gap-3">
+										<div>
+											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-faint)]">Total Tickets</div>
+											<div className="mt-1 text-xs text-[var(--text-muted)]">All tickets for this event</div>
+										</div>
+										<div className="text-[var(--sold)]"><TicketIcon className="size-4" /></div>
+									</div>
+									<div className="mt-5 flex items-end justify-between gap-3">
+										<div className="text-[2rem] font-extrabold leading-none tracking-[-0.05em] text-[var(--text)] tabular-nums sm:text-[2.3rem]">
+											{metrics.totalTickets.toLocaleString("id-ID")}
+										</div>
+										<div className="pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-faint)]">Event total</div>
+									</div>
+									<div className="mt-4 flex items-center gap-3">
+										<div className="h-px flex-1 bg-[var(--sold)]" />
+										<div className="text-[10px] font-medium text-[var(--text-faint)]">all sessions</div>
+									</div>
+								</div>
+								<div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[linear-gradient(180deg,var(--surface),var(--surface-elevated))] p-4 shadow-[inset_0_1px_0_var(--highlight)]">
+									<div className="flex items-start justify-between gap-3">
+										<div>
+											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-faint)]">{remainingMetricTitle}</div>
+											<div className="mt-1 text-xs text-[var(--text-muted)]">
+												{remainingMetricDescription}
+											</div>
+										</div>
+										<div className={ticketsLeftNotBuyable ? "text-[var(--closed)]" : "text-[var(--available)]"}>
+											<BoxIcon className="size-4" />
+										</div>
+									</div>
+									<div className="mt-5 flex items-end justify-between gap-3">
+										<div className="text-[2rem] font-extrabold leading-none tracking-[-0.05em] text-[var(--text)] tabular-nums sm:text-[2.3rem]">
+											{metrics.remaining.toLocaleString("id-ID")}
+										</div>
+										<div
+											className={`pb-1 text-[10px] font-bold uppercase tracking-[0.2em] ${
+												ticketsLeftNotBuyable ? "text-[var(--closed)]" : "text-[var(--available)]"
+											}`}
+										>
+											{remainingMetricStatusLabel}
+										</div>
+									</div>
+									<div className="mt-4 flex items-center gap-3">
+										<div className={`h-px flex-1 ${ticketsLeftNotBuyable ? "bg-[var(--closed)]" : "bg-[var(--available)]"}`} />
+										<div className="text-[10px] font-medium text-[var(--text-faint)]">
+											{remainingMetricFooter}
+										</div>
+									</div>
+								</div>
+								<div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[linear-gradient(180deg,var(--surface),var(--surface-elevated))] p-4 shadow-[inset_0_1px_0_var(--highlight)]">
+									<div className="flex items-start justify-between gap-3">
+										<div>
+											<div className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-faint)]">Sold Rate</div>
+											<div className="mt-1 text-xs text-[var(--text-muted)]">How many tickets are sold</div>
+										</div>
+										<div className="text-[var(--warn)]"><FlameIcon className="size-4" /></div>
+									</div>
+									<div className="mt-5 flex items-end justify-between gap-3">
+										<div className="text-[2rem] font-extrabold leading-none tracking-[-0.05em] text-[var(--text)] tabular-nums sm:text-[2.3rem]">
+											{metrics.soldRate.toFixed(1)}%
+										</div>
+										<div className="pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--warn)]">already sold</div>
+									</div>
+									<div className="mt-4 flex items-center gap-3">
+										<div className="h-px flex-1 bg-[var(--warn)]" />
+										<div className="text-[10px] font-medium text-[var(--text-faint)]">tickets not sold yet</div>
+									</div>
+								</div>
+							</section>
+
+							<footer className="mt-6 flex flex-col gap-3 border-t border-[color:var(--border)] pt-4 text-sm text-[var(--text-muted)] sm:flex-row sm:items-center sm:justify-between">
+								<div className="flex flex-wrap items-center gap-3">
+									<span>
+										Built by{" "}
+										<a
+											className="font-semibold text-[var(--accent)] hover:underline"
+											href="https://x.com/estrellawin19"
+											rel="noreferrer"
+											target="_blank"
+										>
+											@estrellawin19
+										</a>
+									</span>
+									<a
+										className="inline-flex items-center gap-2 text-[var(--accent-text)] no-underline transition hover:text-[var(--support)]"
+										href="https://tako.id/Sportagame19Win"
+										rel="noreferrer"
+										target="_blank"
+									>
+										<SupportIcon className="size-4 text-[var(--support)]" />
+										Support via Tako
+									</a>
+								</div>
+								<span className="text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
+									Fast scan surface for live exclusive drops
+								</span>
+							</footer>
 						</>
 					) : null}
 				</>
