@@ -495,17 +495,18 @@ function buildCard(args: {
 	const { availableQuota, category, isBeforeDeadline, isEventClosed, member, metaHtml, photoMap, purchaseLink, sessionKey } =
 		args;
 	const memberName = member.jkt48_member_name ?? "Unknown";
-	const soldCount = member.tickets_sold ?? 0;
-	const totalCapacity = soldCount + availableQuota;
+	const soldCount = Math.max(0, member.tickets_sold ?? 0);
+	const remainingQuota = Math.max(0, availableQuota);
+	const totalCapacity = soldCount + remainingQuota;
 	const warnLimit = getWarnLimit(category);
 	const safeName = memberName.trim().toLowerCase();
 	const rawPhotoUrl = photoMap.get(safeName);
 
 	let status: MemberCardViewModel["status"] = "avail";
-	let buttonLabel = `${availableQuota}&nbsp;LEFT`;
+	let buttonLabel = `${remainingQuota}&nbsp;LEFT`;
 	let badgeLabel: string | null = "OPEN";
 	let badgeClassName = "member-card-badge-avail";
-	let progressPercent = totalCapacity > 0 ? (soldCount / totalCapacity) * 100 : 0;
+	let progressPercent = totalCapacity > 0 ? (remainingQuota / totalCapacity) * 100 : 0;
 	let progressColor = "var(--available)";
 	let clickable = true;
 
@@ -516,22 +517,24 @@ function buildCard(args: {
 		progressPercent = 100;
 		progressColor = "var(--closed)";
 		clickable = false;
-	} else if (availableQuota <= 0) {
+	} else if (remainingQuota <= 0) {
 		status = "sold";
 		buttonLabel = "SOLD&nbsp;OUT";
 		badgeLabel = null;
 		progressPercent = 100;
 		progressColor = "var(--sold)";
 		clickable = false;
-	} else if (availableQuota < warnLimit) {
+	} else if (remainingQuota < warnLimit) {
 		status = "warn";
-		buttonLabel = `${availableQuota}&nbsp;LEFT`;
+		buttonLabel = `${remainingQuota}&nbsp;LEFT`;
 		badgeLabel = "LOW";
 		badgeClassName = "member-card-badge-warn";
 		progressColor = "var(--warn)";
 	} else {
 		progressColor = "var(--available)";
 	}
+
+	progressPercent = Math.max(0, Math.min(100, progressPercent));
 
 	return {
 		badgeClassName,
