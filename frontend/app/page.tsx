@@ -549,6 +549,7 @@ function buildCard(args: {
 		progressColor,
 		progressPercent,
 		purchaseLink,
+		sessionKey,
 		soldCount,
 		status,
 	};
@@ -801,11 +802,9 @@ export default function Page() {
 		const mapped = new Map<string, MemberCardViewModel[]>();
 
 		for (const card of cards) {
-			const lastSeparator = card.id.lastIndexOf("-");
-			const sessionKey = lastSeparator >= 0 ? card.id.slice(0, lastSeparator) : card.id;
-			const list = mapped.get(sessionKey) ?? [];
+			const list = mapped.get(card.sessionKey) ?? [];
 			list.push(card);
-			mapped.set(sessionKey, list);
+			mapped.set(card.sessionKey, list);
 		}
 
 		return mapped;

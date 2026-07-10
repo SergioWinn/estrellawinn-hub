@@ -4,6 +4,7 @@ export type CardStatus = "avail" | "warn" | "sold" | "closed";
 
 export interface MemberCardViewModel {
 	id: string;
+	sessionKey: string;
 	memberName: string;
 	metaHtml: string;
 	photoUrl: string;
