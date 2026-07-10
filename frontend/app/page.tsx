@@ -955,6 +955,16 @@ export default function Page() {
 							<ClockIcon className="size-3.5 text-[var(--accent)]" />
 							<span>{statusDetailLabel}</span>
 						</div>
+						<div className="hidden h-4 w-px bg-[var(--border)] sm:block" />
+						<div className="inline-flex items-center gap-3 text-sm leading-5">
+							<span className="text-[var(--text-faint)]">
+								Built by <a className="font-semibold text-[var(--accent)] hover:underline" href="https://x.com/estrellawin19" rel="noreferrer" target="_blank">@estrellawin19</a>
+							</span>
+							<a className="inline-flex items-center gap-1.5 font-semibold text-[var(--support)] no-underline hover:underline" href="https://tako.id/Sportagame19Win" rel="noreferrer" target="_blank">
+								<SupportIcon className="size-3.5" />
+								Tako
+							</a>
+						</div>
 						{workerWaitingRoom || detailError || pageError ? (
 							<button
 								className="ml-auto inline-flex min-h-10 items-center rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] transition hover:bg-[color:var(--surface-soft)]"
@@ -1111,28 +1121,7 @@ export default function Page() {
 											IDR {(currentEvent.default_price ?? 0).toLocaleString("id-ID")}
 										</span>
 									</div>
-									<div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--text-muted)]">
-										<span>
-											Built by{" "}
-											<a
-												className="font-semibold text-[var(--accent)] hover:underline"
-												href="https://x.com/estrellawin19"
-												rel="noreferrer"
-												target="_blank"
-											>
-												@estrellawin19
-											</a>
-										</span>
-										<a
-											className="inline-flex items-center gap-2 font-semibold text-[var(--accent)] no-underline hover:underline"
-											href="https://tako.id/Sportagame19Win"
-											rel="noreferrer"
-											target="_blank"
-										>
-											<SupportIcon className="size-4 text-[var(--support)]" />
-											Support via Tako
-										</a>
-									</div>
+
 								</div>
 							</section>
 
