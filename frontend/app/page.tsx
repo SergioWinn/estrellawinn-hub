@@ -576,6 +576,7 @@ export default function Page() {
 	const [selectedDate, setSelectedDate] = useState("");
 	const [searchQuery, setSearchQuery] = useState("");
 	const [availableOnly, setAvailableOnly] = useState(false);
+	const [isRetrying, setIsRetrying] = useState(false);
 	const [waitingRoomActive, setWaitingRoomActive] = useState(false);
 	const [eventListStale, setEventListStale] = useState(false);
 	const pollingOptions = waitingRoomActive ? WAITING_ROOM_POLLING : FOCUSED_POLLING;
@@ -786,6 +787,8 @@ export default function Page() {
 	const remainingMetricDescription = ticketsLeftNotBuyable ? "Still listed in event data" : "Tickets you can still buy";
 	const remainingMetricStatusLabel = ticketsLeftNotBuyable ? "not buyable" : "still open";
 	const remainingMetricFooter = ticketsLeftNotBuyable ? "view-only signal" : "ready to buy";
+ 	const showSearchEmpty = isSearchMode && !cards.length;
+ 	const showAvailableOnlyEmpty = !isSearchMode && availableOnly && !cards.length;
 
 	useEffect(() => {
 		const intervalId = window.setInterval(() => {
@@ -818,12 +821,18 @@ export default function Page() {
 				: null;
 	const showGlobalWorkerBanner = Boolean(workerErrorMessage && !currentEvent);
 
-	function retryAll() {
+	async function retryAll() {
+		if (isRetrying) {
+			return;
+		}
+
+		setIsRetrying(true);
 		setWaitingRoomActive(false);
-		void mutateMembers();
-		void mutateCodes();
-		void mutateEvents();
-		void mutateDetail();
+		try {
+			await Promise.allSettled([mutateMembers(), mutateCodes(), mutateEvents(), mutateDetail()]);
+		} finally {
+			setIsRetrying(false);
+		}
 	}
 
 	return (
@@ -910,6 +919,7 @@ export default function Page() {
 
 			{showGlobalWorkerBanner ? (
 				<div
+					aria-live="polite"
 					className={`mb-4 rounded-2xl p-4 text-sm ${
 						workerWaitingRoom
 							? "border border-[var(--warn)] bg-[color:var(--warn-soft)] text-[var(--warn-text)]"
@@ -924,9 +934,10 @@ export default function Page() {
 						<button
 							className="inline-flex min-h-11 items-center justify-center rounded-full border border-current px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:opacity-85"
 							onClick={retryAll}
+							disabled={isRetrying}
 							type="button"
 						>
-							{workerWaitingRoom ? "Retry now" : "Refresh now"}
+							{isRetrying ? "Refreshing..." : workerWaitingRoom ? "Retry now" : "Refresh now"}
 						</button>
 					</div>
 				</div>
@@ -953,7 +964,8 @@ export default function Page() {
 
 			{!isLoading && !categoryKeys.length && !pageError && !detailError ? (
 				<div className="rounded-2xl border border-[var(--sold)] bg-[color:var(--sold-soft)] p-4 text-sm text-[var(--sold-text)]">
-					No active Exclusive events found or failed to fetch data.
+					<p className="m-0 font-semibold">No active exclusive events are available right now.</p>
+					<p className="mb-0 mt-2 text-[var(--sold-text)]/90">Refresh the feed in a moment or switch back when the upstream schedule opens new drops.</p>
 				</div>
 			) : null}
 
@@ -1061,7 +1073,7 @@ export default function Page() {
 							</section>
 
 							{workerWaitingRoom ? (
-								<div className="mb-4 flex flex-col gap-3 rounded-2xl border border-[var(--warn)] bg-[color:var(--warn-soft)] p-4 text-sm text-[var(--warn-text)] sm:flex-row sm:items-center sm:justify-between">
+								<div aria-live="polite" className="mb-4 flex flex-col gap-3 rounded-2xl border border-[var(--warn)] bg-[color:var(--warn-soft)] p-4 text-sm text-[var(--warn-text)] sm:flex-row sm:items-center sm:justify-between">
 									<div>
 										<AlertIcon className="mr-2 inline size-4 align-[-2px]" />
 										Showing the latest cached data{staleMinutesAgo ? ` (${staleMinutesAgo})` : ""}. The upstream queue is active.
@@ -1069,14 +1081,16 @@ export default function Page() {
 									<button
 										className="inline-flex min-h-11 items-center justify-center rounded-full border border-current px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:opacity-85"
 										onClick={retryAll}
+										disabled={isRetrying}
 										type="button"
 									>
-										Retry now
+										{isRetrying ? "Refreshing..." : "Retry now"}
 									</button>
 								</div>
 							) : detailError ? (
-								<div className="mb-4 rounded-2xl border border-[var(--sold)] bg-[color:var(--sold-soft)] p-4 text-sm text-[var(--sold-text)]">
-									Unable to refresh live data. Showing the last successful snapshot.
+								<div aria-live="polite" className="mb-4 rounded-2xl border border-[var(--sold)] bg-[color:var(--sold-soft)] p-4 text-sm text-[var(--sold-text)]">
+									<p className="m-0 font-semibold">Unable to refresh live data.</p>
+									<p className="mb-0 mt-2 text-[var(--sold-text)]/90">The last successful snapshot is still visible below. Retry when the upstream feed stabilizes.</p>
 								</div>
 							) : null}
 
@@ -1121,9 +1135,36 @@ export default function Page() {
 
 							{!cards.length ? (
 								<div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4 text-sm text-[var(--text-muted)]">
-									{isSearchMode
-										? `Member '${searchQuery.trim()}' not found in this event.`
-										: "All clear. No active tickets or available sessions right now."}
+									{showSearchEmpty ? (
+										<>
+											<p className="m-0 font-semibold text-[var(--text)]">No schedules matched &quot;{searchQuery.trim()}&quot;.</p>
+											<p className="mb-0 mt-2">Try a shorter member name or clear the search to return to the full event view.</p>
+											<button
+												className="mt-3 inline-flex min-h-10 items-center rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] transition hover:bg-[color:var(--surface)]"
+												onClick={() => setSearchQuery("")}
+												type="button"
+											>
+												Clear search
+											</button>
+										</>
+									) : showAvailableOnlyEmpty ? (
+										<>
+											<p className="m-0 font-semibold text-[var(--text)]">No tickets are currently buyable for this filter.</p>
+											<p className="mb-0 mt-2">Turn off Available Only or switch to another date to keep monitoring this event.</p>
+											<button
+												className="mt-3 inline-flex min-h-10 items-center rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] transition hover:bg-[color:var(--surface)]"
+												onClick={() => setAvailableOnly(false)}
+												type="button"
+											>
+												Show all members
+											</button>
+										</>
+									) : (
+										<>
+											<p className="m-0 font-semibold text-[var(--text)]">No active sessions are visible right now.</p>
+											<p className="mb-0 mt-2">Try another date, switch events, or refresh to check whether the upstream feed has changed.</p>
+										</>
+									)}
 								</div>
 							) : (
 								<div id="laporan-container">
