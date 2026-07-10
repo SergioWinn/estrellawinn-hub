@@ -293,7 +293,11 @@ function formatMinutesAgo(value?: string): string {
 	}
 
 	const diffMinutes = Math.max(0, Math.floor((Date.now() - parsed.getTime()) / 60000));
-	return diffMinutes <= 0 ? "baru saja" : `${diffMinutes} menit yang lalu`;
+	if (diffMinutes <= 0) {
+		return "just now";
+	}
+
+	return diffMinutes === 1 ? "1 minute ago" : `${diffMinutes} minutes ago`;
 }
 
 function formatDatePrefix(value?: string): string {
@@ -737,6 +741,13 @@ export default function Page() {
 	const visibleSessions = isSearchMode
 		? dateKeys.flatMap((key) => groupedSessions.get(key) ?? [])
 		: groupedSessions.get(activeDate) ?? [];
+	const visibleDateGroups = isSearchMode
+		? dateKeys
+				.map((dateKey) => ({ dateKey, sessions: groupedSessions.get(dateKey) ?? [] }))
+				.filter((group) => group.sessions.length > 0)
+		: activeDate
+			? [{ dateKey: activeDate, sessions: groupedSessions.get(activeDate) ?? [] }]
+			: [];
 
 	const cards = (() => {
 		if (!currentEvent) {
@@ -784,7 +795,7 @@ export default function Page() {
 	const allCardsClosed = cards.length > 0 && cards.every((card) => card.status === "closed");
 	const ticketsLeftNotBuyable = closed || allCardsClosed;
 	const remainingMetricTitle = ticketsLeftNotBuyable ? "Quota Remaining" : "Tickets Left";
-	const remainingMetricDescription = ticketsLeftNotBuyable ? "Still listed in event data" : "Tickets you can still buy";
+	const remainingMetricDescription = ticketsLeftNotBuyable ? "Still listed by the upstream event feed" : "Tickets you can still buy";
 	const remainingMetricStatusLabel = ticketsLeftNotBuyable ? "not buyable" : "still open";
 	const remainingMetricFooter = ticketsLeftNotBuyable ? "view-only signal" : "ready to buy";
  	const showSearchEmpty = isSearchMode && !cards.length;
@@ -811,6 +822,7 @@ export default function Page() {
 	const hasStaleData = Boolean(
 		membersResponse?.isStale || codesResponse?.isStale || detailSWR.data?.isStale || eventListStale,
 	);
+	const activeCategoryLabel = CATEGORY_LABELS[currentEvent?.category ?? ""] ?? (currentEvent?.category ?? "-").replaceAll("_", " ");
 	const workerWaitingRoom = waitingRoomActive || hasStaleData || isWaitingRoomError(pageError) || isWaitingRoomError(detailError);
 	const workerErrorMessage = workerWaitingRoom
 		? `Showing the latest cached data${staleMinutesAgo ? ` (${staleMinutesAgo})` : ""}. The upstream queue is active.`
@@ -819,6 +831,16 @@ export default function Page() {
 			: detailError
 				? `Unable to refresh live data. ${String(detailError.message)}`
 				: null;
+	const statusSummaryLabel = workerWaitingRoom
+		? "Cached snapshot"
+		: detailError || pageError
+			? "Recovery mode"
+			: "Live monitoring";
+	const statusDetailLabel = workerWaitingRoom
+		? `Retries every 30s${staleMinutesAgo ? ` · cached ${staleMinutesAgo}` : ""}`
+		: lastUpdatedWib
+			? `Checks every 3s · synced ${formatTime(lastUpdatedWib)} WIB`
+			: "Checks every 3s · waiting for first sync";
 	const showGlobalWorkerBanner = Boolean(workerErrorMessage && !currentEvent);
 
 	async function retryAll() {
@@ -906,12 +928,12 @@ export default function Page() {
 				<div className="mt-4 flex flex-wrap items-center gap-2.5 text-sm text-[var(--text-muted)]">
 					<div className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--accent)] sm:text-xs">
 						<span className="size-2 rounded-full bg-[var(--accent)]" />
-						Refreshes every 3s
+						{statusSummaryLabel}
 					</div>
-					{currentEvent && !workerWaitingRoom && !detailError ? (
+					{currentEvent ? (
 						<div className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)] sm:text-xs">
 							<ClockIcon className="size-3.5 text-[var(--accent)]" />
-							{lastUpdatedWib ? `${formatDate(lastUpdatedWib)} ${formatTime(lastUpdatedWib)} WIB` : "Waiting for sync"}
+							{statusDetailLabel}
 						</div>
 					) : null}
 				</div>
@@ -937,7 +959,7 @@ export default function Page() {
 							disabled={isRetrying}
 							type="button"
 						>
-							{isRetrying ? "Refreshing..." : workerWaitingRoom ? "Retry now" : "Refresh now"}
+							{isRetrying ? "Refreshing..." : workerWaitingRoom ? "Retry refresh" : "Refresh data"}
 						</button>
 					</div>
 				</div>
@@ -973,7 +995,7 @@ export default function Page() {
 				<>
 					<section className="mb-6 grid gap-3 rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-3 backdrop-blur sm:gap-4 sm:p-4 md:grid-cols-2 xl:grid-cols-[1.05fr_2.25fr_1.15fr_auto]">
 						<label className="flex min-w-0 flex-col gap-2 text-sm font-semibold sm:text-[0.95rem]">
-							<span className="inline-flex items-center gap-2"><CategoryIcon className="size-4 text-[var(--accent)]" />Category</span>
+							<span className="inline-flex items-center gap-2"><CategoryIcon className="size-4 text-[var(--accent)]" />Format</span>
 							<select
 								className="min-h-11 w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 pr-10 text-sm text-[var(--text)] outline-none sm:text-base"
 								onChange={(event) => {
@@ -992,7 +1014,7 @@ export default function Page() {
 						</label>
 
 						<label className="flex min-w-0 flex-col gap-2 text-sm font-semibold sm:text-[0.95rem]">
-							<span className="inline-flex items-center gap-2"><PinIcon className="size-4 text-[var(--sold)]" />Event</span>
+							<span className="inline-flex items-center gap-2"><PinIcon className="size-4 text-[var(--sold)]" />Drop</span>
 							<select
 								className="min-h-11 w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 pr-10 text-sm text-[var(--text)] outline-none sm:text-base"
 								onChange={(event) => {
@@ -1010,14 +1032,14 @@ export default function Page() {
 						</label>
 
 						<label className="flex min-w-0 flex-col gap-2 text-sm font-semibold sm:text-[0.95rem]">
-							<span className="block truncate whitespace-nowrap"><span className="inline-flex items-center gap-2"><SearchIcon className="size-4 text-[var(--accent)]" />Search member...</span></span>
+							<span className="block truncate whitespace-nowrap"><span className="inline-flex items-center gap-2"><SearchIcon className="size-4 text-[var(--accent)]" />Find member</span></span>
 							<input
 								className="min-h-11 w-full min-w-0 rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 text-sm text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] sm:text-base"
 								onChange={(event) => {
 									setSearchQuery(event.target.value);
 									setSelectedDate("");
 								}}
-								placeholder="Type member name..."
+								placeholder="Type a member name"
 								value={searchQuery}
 							/>
 						</label>
@@ -1028,7 +1050,7 @@ export default function Page() {
 							</div>
 							<div className="min-w-0 flex-1">
 								<div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--accent)]">Available Only</div>
-							<div className="truncate text-sm text-[var(--text)]">Hide unavailable members</div>
+								<div className="truncate text-sm text-[var(--text)]">Hide sold out and closed members</div>
 							</div>
 							<span className="relative ml-auto inline-flex shrink-0 items-center">
 								<input
@@ -1062,7 +1084,7 @@ export default function Page() {
 									<div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--text-muted)] sm:text-[0.95rem]">
 										<span className="inline-flex items-center gap-2">
 											<CategoryIcon className="size-4 text-[var(--accent)]" />
-											{(currentEvent.category ?? "-").replaceAll("_", " ")}
+											{activeCategoryLabel}
 										</span>
 										<span className="inline-flex items-center gap-2">
 											<TicketIcon className="size-4 text-[var(--sold)]" />
@@ -1084,13 +1106,13 @@ export default function Page() {
 										disabled={isRetrying}
 										type="button"
 									>
-										{isRetrying ? "Refreshing..." : "Retry now"}
+										{isRetrying ? "Refreshing..." : "Retry refresh"}
 									</button>
 								</div>
 							) : detailError ? (
 								<div aria-live="polite" className="mb-4 rounded-2xl border border-[var(--sold)] bg-[color:var(--sold-soft)] p-4 text-sm text-[var(--sold-text)]">
 									<p className="m-0 font-semibold">Unable to refresh live data.</p>
-									<p className="mb-0 mt-2 text-[var(--sold-text)]/90">The last successful snapshot is still visible below. Retry when the upstream feed stabilizes.</p>
+									<p className="mb-0 mt-2 text-[var(--sold-text)]/90">The last successful snapshot is still visible below. Retry refresh when the upstream feed stabilizes.</p>
 								</div>
 							) : null}
 
@@ -1102,7 +1124,7 @@ export default function Page() {
 
 							{isSearchMode && cards.length ? (
 								<div className="mb-4 rounded-2xl border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] p-4 text-sm text-[var(--accent-text)]">
-									<SearchIcon className="mr-2 inline size-4 align-[-2px]" />Showing <strong>{searchQuery.trim().toUpperCase()}</strong> across all dates.
+									<SearchIcon className="mr-2 inline size-4 align-[-2px]" />Search mode ignores the selected date and shows every match for <strong>{searchQuery.trim().toUpperCase()}</strong>.
 								</div>
 							) : null}
 
@@ -1138,7 +1160,7 @@ export default function Page() {
 									{showSearchEmpty ? (
 										<>
 											<p className="m-0 font-semibold text-[var(--text)]">No schedules matched &quot;{searchQuery.trim()}&quot;.</p>
-											<p className="mb-0 mt-2">Try a shorter member name or clear the search to return to the full event view.</p>
+											<p className="mb-0 mt-2">Try a shorter member name or clear search to return to the date-based schedule view.</p>
 											<button
 												className="mt-3 inline-flex min-h-10 items-center rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] transition hover:bg-[color:var(--surface)]"
 												onClick={() => setSearchQuery("")}
@@ -1185,29 +1207,40 @@ export default function Page() {
 										</div>
 									</div>
 
-									{visibleSessions.map((session) => {
-										const sessionLabel = stripSessionLabel(session.label);
-										const timeInfo = session.startTime ? ` | ${session.startTime.slice(0, 5)} - ${session.endTime.slice(0, 5)}` : "";
-										const sessionCards = cards.filter((card) =>
-											card.id.startsWith(`${session.date}-${sessionLabel}-${session.startTime}`),
-										);
-
-										return (
-											<section className="mb-6 first:mt-0 sm:mb-7" key={`${sessionLabel}-${session.startTime}`}>
-												{!isSearchMode ? (
-													<h3 className="mb-3 mt-1 text-sm font-semibold text-[var(--text)] sm:mb-4 sm:text-base lg:text-lg">
-														{sessionLabel}
-														<span className="ml-1 text-[11px] font-medium text-[var(--text-faint)] sm:text-[13px]">{timeInfo}</span>
-													</h3>
-												) : null}
-												<div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5 sm:gap-4">
-													{sessionCards.map((card) => (
-														<MemberCard card={card} key={card.id} />
-													))}
+									{visibleDateGroups.map((group) => (
+										<section className="mb-6 last:mb-0 sm:mb-7" key={group.dateKey}>
+											{isSearchMode ? (
+												<div className="mb-4 flex items-center gap-2 border-b border-[color:var(--border)] pb-2 text-sm font-semibold text-[var(--text)] sm:text-base">
+													<CalendarIcon className="size-4 text-[var(--accent)]" />
+													<span>{group.dateKey}</span>
+													<span className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--text-faint)] sm:text-xs">
+														{group.sessions.length} session{group.sessions.length === 1 ? "" : "s"}
+													</span>
 												</div>
-											</section>
-										);
-									})}
+											) : null}
+											{group.sessions.map((session) => {
+												const sessionLabel = stripSessionLabel(session.label);
+												const timeInfo = session.startTime ? ` | ${session.startTime.slice(0, 5)} - ${session.endTime.slice(0, 5)}` : "";
+												const sessionCards = cards.filter((card) =>
+													card.id.startsWith(`${session.date}-${sessionLabel}-${session.startTime}`),
+												);
+
+												return (
+													<section className="mb-5 last:mb-0 sm:mb-6" key={`${group.dateKey}-${sessionLabel}-${session.startTime}`}>
+														<h3 className="mb-3 mt-1 text-sm font-semibold text-[var(--text)] sm:mb-4 sm:text-base lg:text-lg">
+															{sessionLabel}
+															<span className="ml-1 text-[11px] font-medium text-[var(--text-faint)] sm:text-[13px]">{timeInfo}</span>
+														</h3>
+														<div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5 sm:gap-4">
+															{sessionCards.map((card) => (
+																<MemberCard card={card} key={card.id} />
+															))}
+														</div>
+													</section>
+												);
+											})}
+										</section>
+									))}
 								</div>
 							)}
 
