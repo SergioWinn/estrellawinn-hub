@@ -46,7 +46,7 @@ export function MemberCard({ card }: MemberCardProps) {
 		<>
 			{card.badgeLabel ? (
 				<div
-					className={`pointer-events-none absolute -right-9 top-3 z-10 w-[6.4rem] rotate-45 select-none py-[3px] text-center text-[7px] font-extrabold uppercase tracking-[0.16em] shadow-[0_8px_18px_rgba(0,0,0,0.18)] sm:-right-8 sm:w-[6.3rem] lg:-right-9 lg:top-2.5 lg:w-[6.15rem] ${ribbonClassName}`}
+					className={`pointer-events-none absolute -right-9 top-3 z-10 w-[6.4rem] rotate-45 select-none py-[3px] text-center text-xs font-extrabold uppercase tracking-[0.16em] shadow-[0_8px_18px_rgba(0,0,0,0.18)] sm:-right-8 sm:w-[6.3rem] lg:-right-9 lg:top-2.5 lg:w-[6.15rem] ${ribbonClassName}`}
 				>
 					{card.badgeLabel}
 				</div>
@@ -54,8 +54,8 @@ export function MemberCard({ card }: MemberCardProps) {
 			<div className="mb-3 w-full pt-1 text-center sm:mb-4 lg:mb-2.5">
 				<div
 					className={hasMetaBreak
-						? "w-full text-[10px] font-semibold uppercase leading-[1.35] tracking-[0.16em] text-[var(--text-muted)] sm:text-[11px] lg:text-[10px]"
-						: "w-full overflow-hidden text-ellipsis whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)] sm:text-[11px] lg:text-[10px]"}
+						? "w-full text-xs font-semibold uppercase leading-[1.35] tracking-[0.16em] text-[var(--text-muted)]"
+						: "w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]"}
 					dangerouslySetInnerHTML={{ __html: card.metaHtml }}
 					title={card.metaHtml.replace(/<br\s*\/?>/gi, " ").replace(/&nbsp;/g, " ")}
 				/>
@@ -80,11 +80,11 @@ export function MemberCard({ card }: MemberCardProps) {
 					<div className={`absolute inset-0 ${isClosed ? "bg-[var(--overlay-closed)]" : "bg-[var(--overlay-sold)]"}`} />
 				) : null}
 			</div>
-			<div className="mb-2 line-clamp-2 min-h-[2.55rem] w-full text-sm font-bold leading-tight text-[var(--text)] sm:mb-3 sm:text-base lg:mb-1.5 lg:min-h-[2.2rem] lg:text-[0.92rem]">
+			<div className="mb-2 line-clamp-2 min-h-[2.55rem] w-full text-base font-bold leading-tight text-[var(--text)] sm:mb-3 lg:mb-1.5 lg:min-h-[2.2rem] lg:text-sm">
 				{card.memberName}
 			</div>
 			<div className="mt-auto w-full">
-				<div className="mb-2 flex w-full justify-center px-1 text-[11px] font-medium text-[var(--text-muted)] sm:text-xs lg:mb-1 lg:text-[10px]">
+				<div className="mb-2 flex w-full justify-center px-1 text-xs font-medium text-[var(--text-muted)] lg:mb-1">
 					<span>
 						Sold:&nbsp;
 						<b className={card.status === "avail" || card.status === "warn" ? "font-extrabold text-[var(--accent)]" : "font-extrabold text-[var(--text)]"}>
@@ -108,7 +108,7 @@ export function MemberCard({ card }: MemberCardProps) {
 							}}
 						/>
 						<div
-							className="relative z-10 flex min-h-11 w-full min-w-0 items-center justify-center px-2 text-[11px] font-extrabold tracking-[0.12em] text-[var(--accent-text)] text-shadow-[0_1px_3px_rgba(0,0,0,0.5)] sm:text-xs lg:min-h-10 lg:text-[10px]"
+							className="relative z-10 flex min-h-11 w-full min-w-0 items-center justify-center px-2 text-xs font-extrabold tracking-[0.12em] text-[var(--accent-text)] text-shadow-[0_1px_3px_rgba(0,0,0,0.5)] lg:min-h-10"
 							dangerouslySetInnerHTML={{ __html: card.buttonLabel }}
 						/>
 					</a>
@@ -126,7 +126,7 @@ export function MemberCard({ card }: MemberCardProps) {
 							}}
 						/>
 						<div
-							className="relative z-10 flex min-h-11 w-full min-w-0 items-center justify-center px-2 text-[11px] font-extrabold tracking-[0.12em] text-[var(--accent-text)] text-shadow-[0_1px_3px_rgba(0,0,0,0.5)] sm:text-xs lg:min-h-10 lg:text-[10px]"
+							className="relative z-10 flex min-h-11 w-full min-w-0 items-center justify-center px-2 text-xs font-extrabold tracking-[0.12em] text-[var(--accent-text)] text-shadow-[0_1px_3px_rgba(0,0,0,0.5)] lg:min-h-10"
 							dangerouslySetInnerHTML={{ __html: card.buttonLabel }}
 						/>
 					</div>

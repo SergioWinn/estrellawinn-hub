@@ -881,10 +881,10 @@ export default function Page() {
 			<header className="mb-4 border-b border-[color:var(--border)] pb-4 sm:mb-5 sm:pb-5">
 				<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 					<div className="min-w-0 max-w-[58rem]">
-						<h1 className="m-0 text-[2rem] font-extrabold tracking-[-0.04em] text-[var(--text)] sm:text-[2rem] lg:text-[2.5rem]">
+						<h1 className="m-0 text-3xl font-extrabold tracking-[-0.04em] text-[var(--text)] sm:text-3xl lg:text-5xl">
 							GLOBAL EXCLUSIVE MONITOR
 						</h1>
-						<p className="mt-2 max-w-[62ch] text-sm font-medium text-[var(--text-muted)] sm:text-sm lg:text-base">
+						<p className="mt-2 max-w-[62ch] text-base font-medium leading-6 text-[var(--text-muted)]">
 							Track which JKT48 exclusive sessions are still actionable without digging through queue-heavy upstream pages.
 						</p>
 					</div>
@@ -946,12 +946,12 @@ export default function Page() {
 				</div>
 				{showPrimaryStatus ? (
 					<div className="mt-4 flex min-h-10 flex-wrap items-center gap-2 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[var(--text-muted)]">
-						<div className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--accent)] sm:text-xs">
+						<div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">
 							<span className="size-2 rounded-full bg-[var(--accent)]" />
 							{statusSummaryLabel}
 						</div>
 						<div className="hidden h-4 w-px bg-[var(--border)] sm:block" />
-						<div className="inline-flex items-center gap-2 text-sm">
+						<div className="inline-flex items-center gap-2 text-sm leading-5">
 							<ClockIcon className="size-3.5 text-[var(--accent)]" />
 							<span>{statusDetailLabel}</span>
 						</div>
@@ -1014,7 +1014,7 @@ export default function Page() {
 			{categoryKeys.length ? (
 				<>
 					<section className="mb-5 grid gap-3 rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-3 sm:gap-3 sm:p-4 md:grid-cols-2 xl:grid-cols-[1.05fr_2.25fr_1.15fr_auto]">
-						<label className="flex min-w-0 flex-col gap-2 text-sm font-semibold sm:text-[0.95rem]">
+						<label className="flex min-w-0 flex-col gap-2 text-base font-semibold">
 							<span className="inline-flex items-center gap-2 text-sm"><CategoryIcon className="size-4 text-[var(--accent)]" />Event type</span>
 							<select
 								className="min-h-11 w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 pr-10 text-sm text-[var(--text)] outline-none sm:text-base"
@@ -1033,7 +1033,7 @@ export default function Page() {
 							</select>
 						</label>
 
-						<label className="flex min-w-0 flex-col gap-2 text-sm font-semibold sm:text-[0.95rem]">
+						<label className="flex min-w-0 flex-col gap-2 text-base font-semibold">
 							<span className="inline-flex items-center gap-2 text-sm"><PinIcon className="size-4 text-[var(--sold)]" />Event</span>
 							<select
 								className="min-h-11 w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 pr-10 text-sm text-[var(--text)] outline-none sm:text-base"
@@ -1051,7 +1051,7 @@ export default function Page() {
 							</select>
 						</label>
 
-						<label className="flex min-w-0 flex-col gap-2 text-sm font-semibold sm:text-[0.95rem]">
+						<label className="flex min-w-0 flex-col gap-2 text-base font-semibold">
 							<span className="block truncate whitespace-nowrap"><span className="inline-flex items-center gap-2 text-sm"><SearchIcon className="size-4 text-[var(--accent)]" />Find member</span></span>
 							<input
 								className="min-h-11 w-full min-w-0 rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 text-sm text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] sm:text-base"
@@ -1064,12 +1064,12 @@ export default function Page() {
 							/>
 						</label>
 
-						<label className="mt-1 flex min-h-11 min-w-0 items-center gap-3 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-elevated)] px-3 py-2.5 text-sm font-semibold sm:justify-self-end sm:text-[0.95rem] xl:min-w-[280px]">
+						<label className="mt-1 flex min-h-11 min-w-0 items-center gap-3 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-elevated)] px-3 py-2.5 text-base font-semibold sm:justify-self-end xl:min-w-[280px]">
 							<div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] text-sm text-[var(--accent)]">
 								<DotIcon className="size-2.5" />
 							</div>
 							<div className="min-w-0 flex-1">
-								<div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--accent)]">Available Only</div>
+								<div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">Available Only</div>
 								<div className="truncate text-sm text-[var(--text)]">Hide sold out and closed members</div>
 							</div>
 							<span className="relative ml-auto inline-flex shrink-0 items-center">
@@ -1079,7 +1079,7 @@ export default function Page() {
 									onChange={(event) => setAvailableOnly(event.target.checked)}
 									type="checkbox"
 								/>
-								<span className="flex items-center gap-3 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-2 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--accent)] peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[var(--bg-elevated)]">
+								<span className="flex items-center gap-3 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-2 py-1 text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-muted)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--accent)] peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[var(--bg-elevated)]">
 									<span className={`transition-colors ${availableOnly ? "text-[var(--text-faint)]" : "text-[var(--accent)]"}`}>Off</span>
 									<span className={`relative h-7 w-12 rounded-full border transition-colors ${
 										availableOnly ? "border-[color:var(--accent-border)] bg-[color:var(--accent-soft)]" : "border-[color:var(--border)] bg-[color:var(--surface)]"
@@ -1101,7 +1101,7 @@ export default function Page() {
 							<section className="mb-4">
 								<div className="min-w-0">
 									<h2 className="text-2xl font-bold tracking-[-0.03em] text-[var(--text)] sm:text-[2rem]">{currentEvent.title ?? "Event"}</h2>
-									<div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--text-muted)]">
+								<div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-base text-[var(--text-muted)]">
 										<span className="inline-flex items-center gap-2">
 											<CategoryIcon className="size-4 text-[var(--accent)]" />
 											{activeCategoryLabel}
@@ -1115,20 +1115,20 @@ export default function Page() {
 							</section>
 
 							{availableOnly && cards.length ? (
-								<div className="mb-4 rounded-2xl border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] p-4 text-sm text-[var(--accent-text)]">
+								<div className="mb-4 rounded-2xl border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] p-4 text-base text-[var(--accent-text)]">
 									Showing only members with tickets still available.
 								</div>
 							) : null}
 
 							{isSearchMode && cards.length ? (
-								<div className="mb-4 rounded-2xl border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] p-4 text-sm text-[var(--accent-text)]">
+								<div className="mb-4 rounded-2xl border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] p-4 text-base text-[var(--accent-text)]">
 									<SearchIcon className="mr-2 inline size-4 align-[-2px]" />Search mode ignores the selected date and shows every match for <strong>{searchQuery.trim().toUpperCase()}</strong>.
 								</div>
 							) : null}
 
 							{!isSearchMode && dateKeys.length ? (
 								<section className="mb-4">
-									<div className="mb-3 text-sm font-semibold text-[var(--text-muted)] inline-flex items-center gap-2">
+									<div className="mb-3 text-base font-semibold text-[var(--text-muted)] inline-flex items-center gap-2">
 										<CalendarIcon className="size-4" />
 										<span>Date: {dateKeys.length === 1 ? dateKeys[0] : "Choose a schedule"}</span>
 									</div>
@@ -1154,7 +1154,7 @@ export default function Page() {
 							) : null}
 
 							{!cards.length ? (
-								<div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4 text-sm text-[var(--text-muted)]">
+								<div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4 text-base text-[var(--text-muted)]">
 									{showSearchEmpty ? (
 										<>
 											<p className="m-0 font-semibold text-[var(--text)]">No schedules matched &quot;{searchQuery.trim()}&quot;.</p>
@@ -1191,7 +1191,7 @@ export default function Page() {
 									{visibleDateGroups.map((group) => (
 										<section className="mb-6 last:mb-0 sm:mb-7" key={group.dateKey}>
 											{isSearchMode ? (
-												<div className="mb-4 flex items-center gap-2 border-b border-[color:var(--border)] pb-2 text-sm font-semibold text-[var(--text)] sm:text-base">
+												<div className="mb-4 flex items-center gap-2 border-b border-[color:var(--border)] pb-2 text-base font-semibold text-[var(--text)]">
 													<CalendarIcon className="size-4 text-[var(--accent)]" />
 													<span>{group.dateKey}</span>
 													<span className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-faint)]">
@@ -1206,9 +1206,9 @@ export default function Page() {
 
 												return (
 													<section className="mb-5 last:mb-0 sm:mb-6" key={`${group.dateKey}-${sessionLabel}-${session.startTime}`}>
-														<h3 className="mb-3 mt-1 text-sm font-semibold text-[var(--text)] sm:mb-4 sm:text-base lg:text-base">
+														<h3 className="mb-3 mt-1 text-base font-semibold text-[var(--text)] sm:mb-4 lg:text-lg">
 															{sessionLabel}
-															<span className="ml-1 text-[11px] font-medium text-[var(--text-faint)] sm:text-[13px]">{timeInfo}</span>
+															<span className="ml-1 text-xs font-medium text-[var(--text-faint)] sm:text-sm">{timeInfo}</span>
 														</h3>
 														<div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5 sm:gap-4">
 															{sessionCards.map((card) => (
@@ -1228,26 +1228,26 @@ export default function Page() {
 									<div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[linear-gradient(180deg,var(--surface),var(--surface-elevated))] p-4 shadow-[inset_0_1px_0_var(--highlight)]">
 									<div className="flex items-start justify-between gap-3">
 										<div>
-											<div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--text-faint)]">Total Tickets</div>
+											<div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-faint)]">Total Tickets</div>
 											<div className="mt-1 text-sm text-[var(--text-muted)]">All tickets for this event</div>
 										</div>
 										<div className="text-[var(--sold)]"><TicketIcon className="size-4" /></div>
 									</div>
 									<div className="mt-5 flex items-end justify-between gap-3">
-										<div className="text-[1.75rem] font-extrabold leading-none tracking-[-0.04em] text-[var(--text)] tabular-nums sm:text-[2rem]">
+										<div className="text-3xl font-extrabold leading-none tracking-[-0.04em] text-[var(--text)] tabular-nums sm:text-4xl">
 											{metrics.totalTickets.toLocaleString("id-ID")}
 										</div>
-										<div className="pb-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--text-faint)]">Event total</div>
+										<div className="pb-1 text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-faint)]">Event total</div>
 									</div>
 									<div className="mt-4 flex items-center gap-3">
 										<div className="h-px flex-1 bg-[var(--sold)]" />
-										<div className="text-[11px] font-medium text-[var(--text-faint)]">all sessions</div>
+										<div className="text-xs font-medium text-[var(--text-faint)]">all sessions</div>
 									</div>
 								</div>
 									<div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[linear-gradient(180deg,var(--surface),var(--surface-elevated))] p-4 shadow-[inset_0_1px_0_var(--highlight)]">
 									<div className="flex items-start justify-between gap-3">
 										<div>
-											<div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--text-faint)]">{remainingMetricTitle}</div>
+											<div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-faint)]">{remainingMetricTitle}</div>
 											<div className="mt-1 text-sm text-[var(--text-muted)]">
 												{remainingMetricDescription}
 											</div>
@@ -1257,11 +1257,11 @@ export default function Page() {
 										</div>
 									</div>
 									<div className="mt-5 flex items-end justify-between gap-3">
-										<div className="text-[1.75rem] font-extrabold leading-none tracking-[-0.04em] text-[var(--text)] tabular-nums sm:text-[2rem]">
+										<div className="text-3xl font-extrabold leading-none tracking-[-0.04em] text-[var(--text)] tabular-nums sm:text-4xl">
 											{metrics.remaining.toLocaleString("id-ID")}
 										</div>
 										<div
-											className={`pb-1 text-[11px] font-bold uppercase tracking-[0.16em] ${
+											className={`pb-1 text-xs font-bold uppercase tracking-[0.16em] ${
 												ticketsLeftNotBuyable ? "text-[var(--closed)]" : "text-[var(--available)]"
 											}`}
 										>
@@ -1270,7 +1270,7 @@ export default function Page() {
 									</div>
 									<div className="mt-4 flex items-center gap-3">
 										<div className={`h-px flex-1 ${ticketsLeftNotBuyable ? "bg-[var(--closed)]" : "bg-[var(--available)]"}`} />
-										<div className="text-[11px] font-medium text-[var(--text-faint)]">
+										<div className="text-xs font-medium text-[var(--text-faint)]">
 											{remainingMetricFooter}
 										</div>
 									</div>
@@ -1280,20 +1280,20 @@ export default function Page() {
 									<div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[linear-gradient(180deg,var(--surface),var(--surface-elevated))] p-4 shadow-[inset_0_1px_0_var(--highlight)] md:col-span-2">
 										<div className="flex items-start justify-between gap-3">
 											<div>
-												<div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--text-faint)]">Open sessions</div>
-												<div className="mt-1 text-sm text-[var(--text-muted)]">Schedules with members still available right now</div>
+											<div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-faint)]">Open sessions</div>
+											<div className="mt-1 text-sm text-[var(--text-muted)]">Schedules with members still available right now</div>
 											</div>
 											<div className="text-[var(--warn)]"><FlameIcon className="size-4" /></div>
 										</div>
 										<div className="mt-5 flex items-end justify-between gap-3">
-											<div className="text-[1.75rem] font-extrabold leading-none tracking-[-0.04em] text-[var(--text)] tabular-nums sm:text-[2rem]">
-												{visibleSessionCount.toLocaleString("id-ID")}
-											</div>
-											<div className="pb-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--warn)]">live scan</div>
+										<div className="text-3xl font-extrabold leading-none tracking-[-0.04em] text-[var(--text)] tabular-nums sm:text-4xl">
+											{visibleSessionCount.toLocaleString("id-ID")}
+										</div>
+										<div className="pb-1 text-xs font-bold uppercase tracking-[0.16em] text-[var(--warn)]">live scan</div>
 										</div>
 										<div className="mt-4 flex items-center gap-3">
 											<div className="h-px flex-1 bg-[var(--warn)]" />
-											<div className="text-[11px] font-medium text-[var(--text-faint)]">matching session groups</div>
+										<div className="text-xs font-medium text-[var(--text-faint)]">matching session groups</div>
 										</div>
 									</div>
 								) : null}
