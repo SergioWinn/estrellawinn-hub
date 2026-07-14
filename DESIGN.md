@@ -220,3 +220,76 @@ Motion is short, local, and state-driven.
 - **Don't** fall back to enterprise gray hierarchy that weakens scan speed.
 - **Don't** use gradient text, side-stripe accents, glassmorphism-by-default, or giant resting shadows.
 - **Don't** treat every grouped surface as a generic card when a pill, rail, or concise panel is enough.
+
+## 8. Hallmark Application Contract
+
+- **Genre:** Atmospheric, expressed as a restrained technical control surface.
+- **App macrostructure:** Catalogue. Controls establish context, live inventory carries the page, and metrics close the scan rather than acting as promotional proof.
+- **App navigation:** Utility signal strip. This product has one destination, so marketing navigation is intentionally absent.
+- **Footer:** Inline colophon.
+- **Enrichment:** None. Live member imagery and operational data are the content.
+- **Motion:** Motion-cut by default. Use only control press feedback, member-card hover lift, and live progress updates.
+- **System allegiance:** Every app stylesheet stamps `design-system: DESIGN.md · designed-as-app`.
+
+## Exports
+
+The runtime source of truth is [`frontend/tokens.css`](frontend/tokens.css). The DTCG export is [`tokens.json`](tokens.json).
+
+### Tailwind v4
+
+```css
+@theme inline {
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+  --color-signal: var(--color-accent);
+  --color-signal-readable: var(--color-accent-readable);
+  --color-signal-focus: var(--color-focus);
+  --color-status-available: var(--color-available);
+  --color-status-warning: var(--color-warn);
+  --color-status-sold: var(--color-sold);
+  --color-status-closed: var(--color-closed);
+  --spacing-3xs: var(--space-3xs);
+  --spacing-2xs: var(--space-2xs);
+  --spacing-xs: var(--space-xs);
+  --spacing-sm: var(--space-sm);
+  --spacing-md: var(--space-md);
+  --spacing-lg: var(--space-lg);
+  --spacing-xl: var(--space-xl);
+  --spacing-2xl: var(--space-2xl);
+  --spacing-3xl: var(--space-3xl);
+  --radius-signal-card: var(--radius-card);
+  --radius-signal-panel: var(--radius-panel);
+  --radius-signal-input: var(--radius-input);
+  --radius-signal-pill: var(--radius-pill);
+  --ease-signal-out: var(--ease-out);
+  --ease-signal-in: var(--ease-in);
+  --ease-signal-in-out: var(--ease-in-out);
+}
+```
+
+### DTCG
+
+The complete light and dark DTCG export is stored in [`tokens.json`](tokens.json). It mirrors every color, font, spacing, type, duration, radius, rule, and easing token from `frontend/tokens.css`.
+
+### shadcn/ui CSS variables
+
+```css
+:root {
+  --background: 17% 0.025 310;
+  --foreground: 97% 0.018 310;
+  --card: 22% 0.04 310;
+  --card-foreground: 97% 0.018 310;
+  --primary: 80% 0.105 295;
+  --primary-foreground: 20% 0.04 310;
+  --secondary: 27% 0.05 310;
+  --secondary-foreground: 97% 0.018 310;
+  --muted: 40% 0.045 310;
+  --muted-foreground: 76% 0.035 310;
+  --destructive: 65% 0.15 10;
+  --destructive-foreground: 98% 0.018 10;
+  --border: 40% 0.045 310;
+  --input: 40% 0.045 310;
+  --ring: 87% 0.12 295;
+  --radius: 1.125rem;
+}
+```

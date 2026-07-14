@@ -506,7 +506,7 @@ function buildCard(args: {
 
 	let status: MemberCardViewModel["status"] = "avail";
 	let buttonLabel = `${remainingQuota}&nbsp;LEFT`;
-	let badgeLabel: string | null = "OPEN";
+	let badgeLabel: string | null = null;
 	let badgeClassName = "member-card-badge-avail";
 	let progressPercent = totalCapacity > 0 ? (remainingQuota / totalCapacity) * 100 : 0;
 	let progressColor = "var(--available)";
@@ -877,11 +877,11 @@ export default function Page() {
 	}
 
 	return (
-		<main className="relative mx-auto w-full max-w-[1680px] px-3 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-6 2xl:px-10">
-			<header className="mb-4 border-b border-[color:var(--border)] pb-4 sm:mb-5 sm:pb-5">
+		<main className="workbench-shell relative mx-auto w-full max-w-[1680px] px-3 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-6 2xl:px-10">
+			<header className="workbench-header mb-4 border-b border-[color:var(--border)] pb-4 sm:mb-5 sm:pb-5">
 				<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 					<div className="min-w-0 max-w-[58rem]">
-						<h1 className="m-0 text-3xl font-extrabold tracking-[-0.04em] text-[var(--text)] sm:text-3xl lg:text-5xl">
+						<h1 className="m-0 min-w-0 text-[length:var(--text-xl)] font-extrabold leading-none tracking-[-0.04em] text-[var(--text)] [overflow-wrap:anywhere] sm:text-[length:var(--text-display)]">
 							GLOBAL EXCLUSIVE MONITOR
 						</h1>
 						<p className="mt-2 max-w-[62ch] text-base font-medium leading-6 text-[var(--text-muted)]">
@@ -889,14 +889,14 @@ export default function Page() {
 						</p>
 					</div>
 					<div className="flex justify-end sm:shrink-0">
-						<div className="inline-flex scale-95 items-center gap-1 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-elevated)]/80 p-1 shadow-[inset_0_1px_0_var(--highlight),0_10px_20px_rgba(49,31,86,0.08)] backdrop-blur-md sm:scale-100">
+						<div className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-1 shadow-[var(--shadow-control)]">
 							<button
 								aria-label="Switch to dark theme"
 								aria-pressed={theme === "dark"}
 								title="Dark theme"
-								className={`inline-flex size-8 items-center justify-center rounded-full transition ${
+								className={`inline-flex size-11 items-center justify-center rounded-full transition-transform duration-[var(--dur-micro)] ${
 									theme === "dark"
-										? "bg-[var(--accent)] text-[var(--ribbon-available-text)] shadow-[0_6px_16px_rgba(49,31,86,0.16)]"
+										? "bg-[var(--accent)] text-[var(--ribbon-available-text)] shadow-[var(--shadow-control)]"
 										: "text-[var(--text-faint)] hover:text-[var(--text)]"
 								}`}
 								onClick={() => updateTheme("dark")}
@@ -904,7 +904,7 @@ export default function Page() {
 							>
 								<svg
 									aria-hidden="true"
-									className={`${theme === "dark" ? "scale-105" : "scale-100"} size-4 transition-transform duration-200`}
+									className={`${theme === "dark" ? "scale-105" : "scale-100"} size-4 transition-transform duration-[var(--dur-short)]`}
 									fill="none"
 									viewBox="0 0 24 24"
 								>
@@ -918,9 +918,9 @@ export default function Page() {
 								aria-label="Switch to light theme"
 								aria-pressed={theme === "light"}
 								title="Light theme"
-								className={`inline-flex size-8 items-center justify-center rounded-full transition ${
+								className={`inline-flex size-11 items-center justify-center rounded-full transition-transform duration-[var(--dur-micro)] ${
 									theme === "light"
-										? "bg-[var(--surface-strong)] text-[var(--accent-strong)] shadow-[0_6px_16px_rgba(49,31,86,0.12)]"
+										? "bg-[var(--surface-strong)] text-[var(--accent-strong)] shadow-[var(--shadow-control)]"
 										: "text-[var(--text-faint)] hover:text-[var(--text)]"
 								}`}
 								onClick={() => updateTheme("light")}
@@ -928,7 +928,7 @@ export default function Page() {
 							>
 								<svg
 									aria-hidden="true"
-									className={`${theme === "light" ? "scale-105" : "scale-100"} size-4 transition-transform duration-200`}
+									className={`${theme === "light" ? "scale-105" : "scale-100"} size-4 transition-transform duration-[var(--dur-short)]`}
 									fill="none"
 									viewBox="0 0 24 24"
 								>
@@ -946,33 +946,35 @@ export default function Page() {
 				</div>
 				{showPrimaryStatus ? (
 					<div className="mt-4 flex min-h-10 flex-wrap items-center gap-2 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[var(--text-muted)]">
-						<div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">
+					<div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent-readable)]">
 							<span className="size-2 rounded-full bg-[var(--accent)]" />
 							{statusSummaryLabel}
 						</div>
 						<div className="hidden h-4 w-px bg-[var(--border)] sm:block" />
 						<div className="inline-flex items-center gap-2 text-sm leading-5">
-							<ClockIcon className="size-3.5 text-[var(--accent)]" />
+							<ClockIcon className="size-3.5 text-[var(--accent-readable)]" />
 							<span>{statusDetailLabel}</span>
 						</div>
 						<div className="hidden h-4 w-px bg-[var(--border)] sm:block" />
 						<div className="inline-flex items-center gap-3 text-sm leading-5">
 							<span className="text-[var(--text-faint)]">
-								Built by <a className="font-semibold text-[var(--accent)] hover:underline" href="https://x.com/estrellawin19" rel="noreferrer" target="_blank">@estrellawin19</a>
+								Built by <a className="inline-flex min-h-11 items-center px-2 font-semibold text-[var(--accent-readable)] hover:underline" href="https://x.com/estrellawin19" rel="noreferrer" target="_blank">@estrellawin19</a>
 							</span>
-							<a className="inline-flex items-center gap-1.5 font-semibold text-[var(--support)] no-underline hover:underline" href="https://tako.id/Sportagame19Win" rel="noreferrer" target="_blank">
+							<a className="inline-flex min-h-11 items-center gap-1.5 px-2 font-semibold text-[var(--support-readable)] no-underline hover:underline" href="https://tako.id/Sportagame19Win" rel="noreferrer" target="_blank">
 								<SupportIcon className="size-3.5" />
 								Tako
 							</a>
 						</div>
 						{workerWaitingRoom || detailError || pageError ? (
 							<button
+								aria-busy={isRetrying}
 								className="ml-auto inline-flex min-h-10 items-center rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] transition hover:bg-[color:var(--surface-soft)]"
+								data-state={isRetrying ? "loading" : workerWaitingRoom || detailError || pageError ? "error" : "default"}
 								onClick={retryAll}
 								disabled={isRetrying}
 								type="button"
 							>
-								{isRetrying ? "Refreshing..." : workerWaitingRoom ? "Retry refresh" : "Refresh data"}
+								{isRetrying ? "Refreshing…" : workerWaitingRoom ? "Retry refresh" : "Refresh data"}
 							</button>
 						) : null}
 					</div>
@@ -1025,9 +1027,10 @@ export default function Page() {
 				<>
 					<section className="mb-5 grid gap-3 rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-3 sm:gap-3 sm:p-4 md:grid-cols-2 xl:grid-cols-[1.05fr_2.25fr_1.15fr_auto]">
 						<label className="flex min-w-0 flex-col gap-2 text-base font-semibold">
-							<span className="inline-flex items-center gap-2 text-sm"><CategoryIcon className="size-4 text-[var(--accent)]" />Event type</span>
+							<span className="inline-flex items-center gap-2 text-sm"><CategoryIcon className="size-4 text-[var(--accent-readable)]" />Event type</span>
 							<select
-								className="min-h-11 w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 pr-10 text-sm text-[var(--text)] outline-none sm:text-base"
+								data-state={pageError || detailError ? "error" : activeCategory ? "success" : "default"}
+								className="min-h-11 w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 pr-10 text-sm text-[var(--text)] sm:text-base"
 								onChange={(event) => {
 									setSelectedCategory(event.target.value);
 									setSelectedEventLabel("");
@@ -1044,9 +1047,10 @@ export default function Page() {
 						</label>
 
 						<label className="flex min-w-0 flex-col gap-2 text-base font-semibold">
-							<span className="inline-flex items-center gap-2 text-sm"><PinIcon className="size-4 text-[var(--sold)]" />Event</span>
+							<span className="inline-flex items-center gap-2 text-sm"><PinIcon className="size-4 text-[var(--sold-readable)]" />Event</span>
 							<select
-								className="min-h-11 w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 pr-10 text-sm text-[var(--text)] outline-none sm:text-base"
+								data-state={pageError || detailError ? "error" : activeEventOption ? "success" : "default"}
+								className="min-h-11 w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 pr-10 text-sm text-[var(--text)] sm:text-base"
 								onChange={(event) => {
 									setSelectedEventLabel(event.target.value);
 									setSelectedDate("");
@@ -1062,9 +1066,10 @@ export default function Page() {
 						</label>
 
 						<label className="flex min-w-0 flex-col gap-2 text-base font-semibold">
-							<span className="block truncate whitespace-nowrap"><span className="inline-flex items-center gap-2 text-sm"><SearchIcon className="size-4 text-[var(--accent)]" />Find member</span></span>
+							<span className="block truncate whitespace-nowrap"><span className="inline-flex items-center gap-2 text-sm"><SearchIcon className="size-4 text-[var(--accent-readable)]" />Find member</span></span>
 							<input
-								className="min-h-11 w-full min-w-0 rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 text-sm text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] sm:text-base"
+								data-state={pageError || detailError ? "error" : searchQuery ? "success" : "default"}
+								className="min-h-11 w-full min-w-0 rounded-xl border border-[color:var(--border)] bg-[color:var(--input-bg)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-faint)] sm:text-base"
 								onChange={(event) => {
 									setSearchQuery(event.target.value);
 									setSelectedDate("");
@@ -1075,32 +1080,33 @@ export default function Page() {
 						</label>
 
 						<label className="mt-1 flex min-h-11 min-w-0 items-center gap-3 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-elevated)] px-3 py-2.5 text-base font-semibold sm:justify-self-end xl:min-w-[280px]">
-							<div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] text-sm text-[var(--accent)]">
+							<div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] text-sm text-[var(--accent-readable)]">
 								<DotIcon className="size-2.5" />
 							</div>
 							<div className="min-w-0 flex-1">
-								<div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">Available Only</div>
+								<div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent-readable)]">Available Only</div>
 								<div className="truncate text-sm text-[var(--text)]">Hide sold out and closed members</div>
 							</div>
 							<span className="relative ml-auto inline-flex shrink-0 items-center">
 								<input
 									checked={availableOnly}
 									className="peer sr-only"
+									data-state={availableOnly ? "success" : "default"}
 									onChange={(event) => setAvailableOnly(event.target.checked)}
 									type="checkbox"
 								/>
 								<span className="flex items-center gap-3 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-2 py-1 text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-muted)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--accent)] peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[var(--bg-elevated)]">
-									<span className={`transition-colors ${availableOnly ? "text-[var(--text-faint)]" : "text-[var(--accent)]"}`}>Off</span>
+									<span className={`transition-colors ${availableOnly ? "text-[var(--text-faint)]" : "text-[var(--accent-readable)]"}`}>Off</span>
 									<span className={`relative h-7 w-12 rounded-full border transition-colors ${
 										availableOnly ? "border-[color:var(--accent-border)] bg-[color:var(--accent-soft)]" : "border-[color:var(--border)] bg-[color:var(--surface)]"
 									}`}>
 										<span
-											className={`absolute top-1/2 size-5 -translate-y-1/2 rounded-full bg-[var(--toggle-thumb)] shadow-[0_2px_8px_rgba(0,0,0,0.25)] transition-all duration-200 ${
-												availableOnly ? "left-[1.45rem] bg-[var(--accent)]" : "left-1"
+											className={`absolute left-1 top-1/2 size-5 -translate-y-1/2 rounded-full bg-[var(--toggle-thumb)] shadow-[var(--shadow-detail)] transition-transform duration-[var(--dur-short)] ${
+												availableOnly ? "translate-x-5 bg-[var(--accent)]" : "translate-x-0"
 											}`}
 										/>
 									</span>
-									<span className={`transition-colors ${availableOnly ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}`}>On</span>
+									<span className={`transition-colors ${availableOnly ? "text-[var(--accent-readable)]" : "text-[var(--text-faint)]"}`}>On</span>
 								</span>
 							</span>
 						</label>
@@ -1113,11 +1119,11 @@ export default function Page() {
 									<h2 className="text-2xl font-bold tracking-[-0.03em] text-[var(--text)] sm:text-[2rem]">{currentEvent.title ?? "Event"}</h2>
 									<div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-base text-[var(--text-muted)]">
 										<span className="inline-flex items-center gap-2">
-											<CategoryIcon className="size-4 text-[var(--accent)]" />
+											<CategoryIcon className="size-4 text-[var(--accent-readable)]" />
 											{activeCategoryLabel}
 										</span>
 										<span className="inline-flex items-center gap-2">
-											<TicketIcon className="size-4 text-[var(--sold)]" />
+											<TicketIcon className="size-4 text-[var(--sold-readable)]" />
 											IDR {(currentEvent.default_price ?? 0).toLocaleString("id-ID")}
 										</span>
 									</div>
@@ -1146,7 +1152,8 @@ export default function Page() {
 									{dateKeys.length > 1 ? (
 										<div className="flex flex-wrap gap-2">
 											{dateKeys.map((dateKey) => (
-												<button
+										<button
+											data-state={dateKey === activeDate ? "success" : "default"}
 													className={`min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition hover:bg-[color:var(--surface-soft)] ${
 														dateKey === activeDate
 															? "border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] text-[var(--accent-text)]"
@@ -1203,7 +1210,7 @@ export default function Page() {
 										<section className="mb-6 last:mb-0 sm:mb-7" key={group.dateKey}>
 											{isSearchMode ? (
 												<div className="mb-4 flex items-center gap-2 border-b border-[color:var(--border)] pb-2 text-base font-semibold text-[var(--text)]">
-													<CalendarIcon className="size-4 text-[var(--accent)]" />
+															<CalendarIcon className="size-4 text-[var(--accent-readable)]" />
 													<span>{group.dateKey}</span>
 													<span className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-faint)]">
 														{group.sessions.length} session{group.sessions.length === 1 ? "" : "s"}
@@ -1242,7 +1249,7 @@ export default function Page() {
 											<div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-faint)]">Total Tickets</div>
 											<div className="mt-1 text-sm text-[var(--text-muted)]">All tickets for this event</div>
 										</div>
-										<div className="text-[var(--sold)]"><TicketIcon className="size-4" /></div>
+											<div className="text-[var(--sold-readable)]"><TicketIcon className="size-4" /></div>
 									</div>
 									<div className="mt-5 flex items-end justify-between gap-3">
 										<div className="text-3xl font-extrabold leading-none tracking-[-0.04em] text-[var(--text)] tabular-nums sm:text-4xl">
@@ -1263,7 +1270,7 @@ export default function Page() {
 												{remainingMetricDescription}
 											</div>
 										</div>
-										<div className={ticketsLeftNotBuyable ? "text-[var(--closed)]" : "text-[var(--available)]"}>
+										<div className={ticketsLeftNotBuyable ? "text-[var(--closed-readable)]" : "text-[var(--available-readable)]"}>
 											<BoxIcon className="size-4" />
 										</div>
 									</div>
@@ -1273,7 +1280,7 @@ export default function Page() {
 										</div>
 										<div
 											className={`pb-1 text-xs font-bold uppercase tracking-[0.16em] ${
-												ticketsLeftNotBuyable ? "text-[var(--closed)]" : "text-[var(--available)]"
+											ticketsLeftNotBuyable ? "text-[var(--closed-readable)]" : "text-[var(--available-readable)]"
 											}`}
 										>
 											{remainingMetricStatusLabel}
@@ -1294,13 +1301,13 @@ export default function Page() {
 											<div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-faint)]">Open sessions</div>
 											<div className="mt-1 text-sm text-[var(--text-muted)]">Schedules with members still available right now</div>
 											</div>
-											<div className="text-[var(--warn)]"><FlameIcon className="size-4" /></div>
+											<div className="text-[var(--warn-readable)]"><FlameIcon className="size-4" /></div>
 										</div>
 										<div className="mt-5 flex items-end justify-between gap-3">
 										<div className="text-3xl font-extrabold leading-none tracking-[-0.04em] text-[var(--text)] tabular-nums sm:text-4xl">
 											{visibleSessionCount.toLocaleString("id-ID")}
 										</div>
-										<div className="pb-1 text-xs font-bold uppercase tracking-[0.16em] text-[var(--warn)]">live scan</div>
+										<div className="pb-1 text-xs font-bold uppercase tracking-[0.16em] text-[var(--warn-readable)]">live scan</div>
 										</div>
 										<div className="mt-4 flex items-center gap-3">
 											<div className="h-px flex-1 bg-[var(--warn)]" />

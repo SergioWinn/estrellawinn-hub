@@ -25,13 +25,13 @@ interface MemberCardProps {
 
 const statusClasses: Record<CardStatus, string> = {
 	avail:
-		"relative flex min-h-full flex-col items-center overflow-hidden rounded-[1.15rem] border border-[color:var(--border)] border-b-[5px] border-b-[var(--available)] bg-[linear-gradient(180deg,var(--card-top),var(--card-bottom))] px-3 py-4 text-center shadow-[inset_0_1px_0_var(--highlight)] transition-transform duration-200 sm:px-4 sm:py-5 lg:px-3 lg:py-3.5 hover:-translate-y-1 hover:border-[color:var(--border-strong)] hover:shadow-[var(--shadow)]",
+		"relative flex min-h-full flex-col items-center overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border)] border-b-[5px] border-b-[var(--available)] bg-[var(--card-top)] px-3 py-4 text-center shadow-[inset_0_1px_0_var(--highlight)] transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] sm:px-4 sm:py-5 lg:px-3 lg:py-4 hover:-translate-y-1",
 	warn:
-		"relative flex min-h-full flex-col items-center overflow-hidden rounded-[1.15rem] border border-[color:var(--border)] border-b-[5px] border-b-[var(--warn)] bg-[linear-gradient(180deg,var(--card-top),var(--card-bottom))] px-3 py-4 text-center shadow-[inset_0_1px_0_var(--highlight)] transition-transform duration-200 sm:px-4 sm:py-5 lg:px-3 lg:py-3.5 hover:-translate-y-1 hover:border-[color:var(--border-strong)] hover:shadow-[var(--shadow)]",
+		"relative flex min-h-full flex-col items-center overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border)] border-b-[5px] border-b-[var(--warn)] bg-[var(--card-top)] px-3 py-4 text-center shadow-[inset_0_1px_0_var(--highlight)] transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] sm:px-4 sm:py-5 lg:px-3 lg:py-4 hover:-translate-y-1",
 	sold:
-		"relative flex min-h-full flex-col items-center overflow-hidden rounded-[1.15rem] border border-[color:var(--border)] border-b-[5px] border-b-[var(--sold)] bg-[linear-gradient(180deg,var(--card-top-muted),var(--card-bottom-muted))] px-3 py-4 text-center opacity-90 shadow-[inset_0_1px_0_var(--highlight)] transition-transform duration-200 sm:px-4 sm:py-5 lg:px-3 lg:py-3.5 hover:-translate-y-1 hover:border-[color:var(--border-strong)] hover:shadow-[var(--shadow)]",
+		"relative flex min-h-full flex-col items-center overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border)] border-b-[5px] border-b-[var(--sold)] bg-[var(--card-top-muted)] px-3 py-4 text-center opacity-90 shadow-[inset_0_1px_0_var(--highlight)] sm:px-4 sm:py-5 lg:px-3 lg:py-4",
 	closed:
-		"relative flex min-h-full flex-col items-center overflow-hidden rounded-[1.15rem] border border-[color:var(--border)] border-b-[5px] border-b-[var(--closed)] bg-[linear-gradient(180deg,var(--closed-soft),var(--card-bottom-muted))] px-3 py-4 text-center opacity-85 shadow-[inset_0_1px_0_var(--highlight)] transition-transform duration-200 sm:px-4 sm:py-5 lg:px-3 lg:py-3.5 hover:-translate-y-1 hover:border-[color:var(--border-strong)] hover:shadow-[var(--shadow)]",
+		"relative flex min-h-full flex-col items-center overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border)] border-b-[5px] border-b-[var(--closed)] bg-[var(--closed-soft)] px-3 py-4 text-center opacity-85 shadow-[inset_0_1px_0_var(--highlight)] sm:px-4 sm:py-5 lg:px-3 lg:py-4",
 };
 
 export function MemberCard({ card }: MemberCardProps) {
@@ -47,12 +47,12 @@ export function MemberCard({ card }: MemberCardProps) {
 		<>
 			{card.badgeLabel ? (
 				<div
-					className={`pointer-events-none absolute -right-9 top-3 z-10 w-[6.4rem] rotate-45 select-none py-[3px] text-center text-xs font-extrabold uppercase tracking-[0.16em] shadow-[0_8px_18px_rgba(0,0,0,0.18)] sm:-right-8 sm:w-[6.3rem] lg:-right-9 lg:top-2.5 lg:w-[6.15rem] ${ribbonClassName}`}
+					className={`pointer-events-none absolute -right-9 top-3 z-10 w-26 rotate-45 select-none py-1 text-center text-xs font-extrabold uppercase tracking-[0.16em] shadow-[var(--shadow-detail)] sm:-right-8 lg:-right-9 lg:top-2 ${ribbonClassName}`}
 				>
 					{card.badgeLabel}
 				</div>
 			) : null}
-			<div className="mb-3 w-full pt-1 text-center sm:mb-4 lg:mb-2.5">
+			<div className="mb-3 w-full pt-1 text-center sm:mb-4 lg:mb-2">
 				<div
 					className={hasMetaBreak
 						? "w-full text-xs font-semibold uppercase leading-[1.35] tracking-[0.16em] text-[var(--text-muted)]"
@@ -61,7 +61,7 @@ export function MemberCard({ card }: MemberCardProps) {
 					title={card.metaHtml.replace(/<br\s*\/?>/gi, " ").replace(/&nbsp;/g, " ")}
 				/>
 			</div>
-			<div className="relative mb-3 size-16 overflow-hidden rounded-full border-2 border-[color:var(--photo-border)] bg-[var(--photo-bg)] shadow-[0_4px_10px_rgba(0,0,0,0.15)] sm:mb-4 sm:size-[4.5rem] lg:mb-2.5 lg:size-[3.85rem]">
+			<div className="relative mb-3 size-16 overflow-hidden rounded-full border-2 border-[color:var(--photo-border)] bg-[var(--photo-bg)] shadow-[var(--shadow-detail)] sm:mb-4 sm:size-18 lg:mb-2 lg:size-16">
 				{/* eslint-disable-next-line @next/next/no-img-element */}
 				<img
 					alt={`${card.memberName} JKT48 photo`}
@@ -81,14 +81,14 @@ export function MemberCard({ card }: MemberCardProps) {
 					<div className={`absolute inset-0 ${isClosed ? "bg-[var(--overlay-closed)]" : "bg-[var(--overlay-sold)]"}`} />
 				) : null}
 			</div>
-			<div className="mb-2 line-clamp-2 min-h-[2.55rem] w-full text-base font-bold leading-tight text-[var(--text)] sm:mb-3 lg:mb-1.5 lg:min-h-[2.2rem] lg:text-sm">
+			<div className="mb-2 line-clamp-2 min-h-10 w-full text-base font-bold leading-tight text-[var(--text)] sm:mb-3 lg:mb-2 lg:min-h-9 lg:text-sm">
 				{card.memberName}
 			</div>
 			<div className="mt-auto w-full">
 				<div className="mb-2 flex w-full justify-center px-1 text-xs font-medium text-[var(--text-muted)] lg:mb-1">
 					<span>
 						Sold:&nbsp;
-						<b className={card.status === "avail" || card.status === "warn" ? "font-extrabold text-[var(--accent)]" : "font-extrabold text-[var(--text)]"}>
+						<b className={card.status === "avail" || card.status === "warn" ? "font-extrabold text-[var(--accent-readable)]" : "font-extrabold text-[var(--text)]"}>
 							{card.soldCount}
 						</b>
 					</span>
@@ -96,20 +96,20 @@ export function MemberCard({ card }: MemberCardProps) {
 				{card.clickable ? (
 					<a
 						aria-label={card.buttonLabel.replace(/&nbsp;/g, " ")}
-						className="relative flex min-h-11 w-full items-center justify-center overflow-hidden rounded-xl border border-[color:var(--border)] bg-[var(--card-progress-bg)] no-underline shadow-[inset_0_0_0_1px_var(--highlight)] transition hover:border-[color:var(--border-strong)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-elevated)] lg:min-h-10"
+						className="relative flex min-h-11 w-full items-center justify-center overflow-hidden rounded-xl border border-[color:var(--border)] bg-[var(--card-progress-bg)] no-underline shadow-[inset_0_0_0_1px_var(--highlight)] transition-transform duration-[var(--dur-micro)] ease-[var(--ease-out)] hover:-translate-y-px focus-visible:outline-[var(--color-focus)] active:translate-y-px"
 						href={card.purchaseLink}
 						rel="noreferrer"
 						target="_blank"
 					>
 						<div
-							className={`absolute inset-y-0 left-0 transition-[width] duration-500 ${isInactive ? "rounded-xl" : "rounded-l-xl"}`}
+							className={`absolute inset-0 origin-left transition-transform duration-[var(--dur-long)] ease-[var(--ease-out)] ${isInactive ? "rounded-xl" : "rounded-l-xl"}`}
 							style={{
 								backgroundColor: card.progressColor,
-								width: `${card.progressPercent}%`,
+								transform: `scaleX(${card.progressPercent / 100})`,
 							}}
 						/>
 						<div
-							className="relative z-10 flex min-h-11 w-full min-w-0 items-center justify-center px-2 text-xs font-extrabold tracking-[0.12em] text-[var(--accent-text)] text-shadow-[0_1px_3px_rgba(0,0,0,0.5)] lg:min-h-10"
+							className="relative z-10 inline-flex min-h-7 min-w-0 items-center justify-center rounded-full bg-[var(--color-paper)] px-2 text-xs font-extrabold tracking-[0.12em] text-[var(--color-ink)]"
 							dangerouslySetInnerHTML={{ __html: card.buttonLabel }}
 						/>
 					</a>
@@ -120,14 +120,14 @@ export function MemberCard({ card }: MemberCardProps) {
 						role="img"
 					>
 						<div
-							className={`absolute inset-y-0 left-0 transition-[width] duration-500 ${isInactive ? "rounded-xl" : "rounded-l-xl"}`}
+							className={`absolute inset-0 origin-left ${isInactive ? "rounded-xl" : "rounded-l-xl"}`}
 							style={{
 								backgroundColor: card.progressColor,
-								width: `${card.progressPercent}%`,
+								transform: `scaleX(${card.progressPercent / 100})`,
 							}}
 						/>
 						<div
-							className="relative z-10 flex min-h-11 w-full min-w-0 items-center justify-center px-2 text-xs font-extrabold tracking-[0.12em] text-[var(--accent-text)] text-shadow-[0_1px_3px_rgba(0,0,0,0.5)] lg:min-h-10"
+							className="relative z-10 inline-flex min-h-7 min-w-0 items-center justify-center rounded-full bg-[var(--color-paper)] px-2 text-xs font-extrabold tracking-[0.12em] text-[var(--color-ink)]"
 							dangerouslySetInnerHTML={{ __html: card.buttonLabel }}
 						/>
 					</div>

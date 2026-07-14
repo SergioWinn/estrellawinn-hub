@@ -1,0 +1,106 @@
+/* Hallmark · macrostructure: Catalogue · genre: atmospheric · design-system: DESIGN.md · designed-as-app
+ * pre-emit critique: P5 H5 E4 S5 R5 V4
+ * tone: technical · anchor hue: signal lilac · contrast: pass (40–41)
+ */
+
+:root {
+  --color-paper: oklch(17% 0.025 310);
+  --color-paper-2: oklch(22% 0.04 310);
+  --color-paper-3: oklch(27% 0.05 310);
+  --color-ink: oklch(97% 0.018 310);
+  --color-ink-2: oklch(89% 0.025 310);
+  --color-muted: oklch(76% 0.035 310);
+  --color-neutral: oklch(69% 0.035 310);
+  --color-rule: oklch(40% 0.045 310);
+  --color-rule-2: oklch(53% 0.055 310);
+  --color-accent: oklch(80% 0.105 295);
+  --color-accent-readable: oklch(80% 0.105 295);
+  --color-accent-strong: oklch(89% 0.065 300);
+  --color-accent-ink: oklch(20% 0.04 310);
+  --color-focus: oklch(87% 0.12 295);
+  --color-support: oklch(61% 0.16 350);
+  --color-support-readable: oklch(61% 0.16 350);
+  --color-support-ink: oklch(98% 0.015 350);
+  --color-available: oklch(78% 0.12 165);
+  --color-available-readable: oklch(78% 0.12 165);
+  --color-available-ink: oklch(21% 0.04 165);
+  --color-warn: oklch(80% 0.105 80);
+  --color-warn-readable: oklch(80% 0.105 80);
+  --color-warn-ink: oklch(24% 0.045 70);
+  --color-sold: oklch(65% 0.15 10);
+  --color-sold-readable: oklch(70% 0.13 10);
+  --color-sold-ink: oklch(98% 0.018 10);
+  --color-closed: oklch(62% 0.055 300);
+  --color-closed-readable: oklch(72% 0.055 300);
+  --color-closed-ink: oklch(96% 0.018 300);
+
+  --font-display: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.25rem;
+  --text-lg: 1.5rem;
+  --text-xl: 2rem;
+  --text-display: clamp(2rem, 4vw, 3.25rem);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+
+  --rule-hair: 1px;
+  --rule-fine: 2px;
+  --radius-card: 1.125rem;
+  --radius-panel: 1.75rem;
+  --radius-input: 0.75rem;
+  --radius-pill: 999px;
+
+  --shadow-hover: 0 18px 36px oklch(8% 0.02 310 / 0.26);
+  --shadow-control: 0 6px 16px oklch(25% 0.06 310 / 0.18);
+  --shadow-detail: 0 4px 10px oklch(8% 0.02 310 / 0.18);
+  --shadow-label: 0 1px 3px oklch(8% 0.02 310 / 0.55);
+}
+
+[data-theme="light"] {
+  --color-paper: oklch(97% 0.018 310);
+  --color-paper-2: oklch(94% 0.03 310);
+  --color-paper-3: oklch(91% 0.04 310);
+  --color-ink: oklch(30% 0.055 310);
+  --color-ink-2: oklch(37% 0.05 310);
+  --color-muted: oklch(43% 0.045 310);
+  --color-neutral: oklch(49% 0.04 310);
+  --color-rule: oklch(82% 0.035 310);
+  --color-rule-2: oklch(68% 0.05 310);
+  --color-accent: oklch(72% 0.105 295);
+  --color-accent-readable: oklch(46% 0.16 295);
+  --color-accent-strong: oklch(61% 0.12 295);
+  --color-accent-ink: oklch(27% 0.055 310);
+  --color-focus: oklch(53% 0.18 295);
+  --color-support: oklch(56% 0.16 350);
+  --color-support-readable: oklch(52% 0.16 350);
+  --color-available: oklch(67% 0.13 165);
+  --color-available-readable: oklch(47% 0.12 165);
+  --color-warn: oklch(67% 0.12 80);
+  --color-warn-readable: oklch(48% 0.12 80);
+  --color-sold: oklch(59% 0.16 10);
+  --color-sold-readable: oklch(51% 0.16 10);
+  --color-closed: oklch(57% 0.065 300);
+  --color-closed-readable: oklch(48% 0.065 300);
+  --shadow-hover: 0 18px 32px oklch(46% 0.04 310 / 0.14);
+  --shadow-control: 0 6px 16px oklch(46% 0.05 310 / 0.16);
+  --shadow-detail: 0 4px 10px oklch(46% 0.04 310 / 0.14);
+}
