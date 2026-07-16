@@ -508,7 +508,7 @@ function buildCard(args: {
 	let buttonLabel = `${remainingQuota}&nbsp;LEFT`;
 	let badgeLabel: string | null = null;
 	let badgeClassName = "member-card-badge-avail";
-	let progressPercent = totalCapacity > 0 ? (remainingQuota / totalCapacity) * 100 : 0;
+	let progressPercent = totalCapacity > 0 ? (soldCount / totalCapacity) * 100 : 0;
 	let progressColor = "var(--available)";
 	let clickable = true;
 
@@ -756,7 +756,18 @@ export default function Page() {
 		: activeDate
 			? [{ dateKey: activeDate, sessions: groupedSessions.get(activeDate) ?? [] }]
 			: [];
-	const visibleSessionCount = visibleDateGroups.reduce((total, group) => total + group.sessions.length, 0);
+	const availableMemberCount = new Set(
+		visibleDateGroups.flatMap((group) =>
+			group.sessions.flatMap((session) =>
+				session.isBeforeDeadline
+					? session.filteredMembers
+							.filter((member) => (member.available_quota ?? 0) > 0)
+							.map((member) => member.jkt48_member_name?.trim().toLowerCase())
+							.filter((name): name is string => Boolean(name))
+					: [],
+			),
+		),
+	).size;
 
 	const cards = (() => {
 		if (!currentEvent) {
@@ -1307,20 +1318,20 @@ export default function Page() {
 									<div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[linear-gradient(180deg,var(--surface),var(--surface-elevated))] p-4 shadow-[inset_0_1px_0_var(--highlight)] md:col-span-2">
 										<div className="flex items-start justify-between gap-3">
 											<div>
-											<div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-faint)]">Open sessions</div>
-											<div className="mt-1 text-sm text-[var(--text-muted)]">Schedules with members still available right now</div>
+											<div className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-faint)]">Available members</div>
+											<div className="mt-1 text-sm text-[var(--text-muted)]">Members with at least one open session</div>
 											</div>
 											<div className="text-[var(--warn-readable)]"><FlameIcon className="size-4" /></div>
 										</div>
 										<div className="mt-5 flex items-end justify-between gap-3">
 										<div className="text-3xl font-extrabold leading-none tracking-[-0.04em] text-[var(--text)] tabular-nums sm:text-4xl">
-											{visibleSessionCount.toLocaleString("id-ID")}
+											{availableMemberCount.toLocaleString("id-ID")}
 										</div>
 										<div className="pb-1 text-xs font-bold uppercase tracking-[0.16em] text-[var(--warn-readable)]">live scan</div>
 										</div>
 										<div className="mt-4 flex items-center gap-3">
 											<div className="h-px flex-1 bg-[var(--warn)]" />
-										<div className="text-xs font-medium text-[var(--text-faint)]">matching session groups</div>
+									<div className="text-xs font-medium text-[var(--text-faint)]">matching current filters</div>
 										</div>
 									</div>
 								) : null}
