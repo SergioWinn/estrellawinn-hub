@@ -139,7 +139,7 @@ const FOCUSED_POLLING = {
 
 const WAITING_ROOM_POLLING = {
 	...FOCUSED_POLLING,
-	refreshInterval: 60000,
+	refreshInterval: 20000,
 } as const;
 
 const LIVE_DETAIL_POLLING = {
