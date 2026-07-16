@@ -4,8 +4,6 @@ const API_BASE_URL = "https://jkt48.com/api/v1";
 const LIVE_REFRESH_INTERVAL_SECONDS = 5;
 const SNAPSHOT_TTL_SECONDS = 24 * 60 * 60;
 const SNAPSHOT_WRITE_INTERVAL_SECONDS = 2 * 60 * 60;
-const WAITING_ROOM_PROBE_INTERVAL_SECONDS = 20;
-const COOKIE_TTL_SECONDS = 15 * 60;
 const UPSTREAM_TIMEOUT_MS = 10_000;
 const EXCLUSIVE_SNAPSHOT_BUNDLE_KEY = "exclusive-snapshot-bundle";
 const FALLBACK_CODES = ["EX783D", "EX9A4A", "EXCD2C", "EXCB75"];
@@ -27,23 +25,11 @@ type ProxyErrorStatus =
 	| "method_not_allowed"
 	| "not_found"
 	| "upstream_invalid_json"
-	| "waiting_room"
 	| "upstream_fetch_failed";
 
 interface CacheEntry {
 	cachedAt: string;
 	payload: unknown;
-}
-
-interface WaitingRoomState {
-	detectedAt: string;
-	generation: number;
-	nextProbeAt: string;
-}
-
-interface CookieEntry {
-	cachedAt: string;
-	value: string;
 }
 
 interface CoordinatorResult {
@@ -122,44 +108,17 @@ function ageInSeconds(timestamp: string): number {
 	return Number.isNaN(timestampMs) ? Number.POSITIVE_INFINITY : (Date.now() - timestampMs) / 1000;
 }
 
-function isWaitingRoomResponse(response: Response, bodyText: string): boolean {
-	const contentType = response.headers.get("content-type") ?? "";
-	const bodyLower = bodyText.trim().toLowerCase();
-	const serverHeader = response.headers.get("server")?.toLowerCase() ?? "";
-	const mitigatedHeader = response.headers.get("cf-mitigated")?.toLowerCase() ?? "";
-
-	if (response.status === 429 || response.status === 503) {
-		return true;
-	}
-
-	const looksLikeHtml =
-		contentType.includes("text/html") || bodyLower.startsWith("<!doctype") || bodyLower.startsWith("<html");
-	const hasWaitingRoomSignature =
-		bodyLower.includes("waiting room") ||
-		bodyLower.includes("cloudflare") ||
-		bodyLower.includes("cf-waitingroom") ||
-		bodyLower.includes("attention required");
-
-	return looksLikeHtml &&
-		(hasWaitingRoomSignature || serverHeader.includes("cloudflare") || mitigatedHeader.length > 0 || response.headers.has("cf-ray"));
-}
-
-function extractWaitingRoomCookie(response: Response): string | null {
-	const setCookie = response.headers.get("set-cookie") ?? "";
-	return setCookie.match(/__cfwaitingroom[^=;,\s]*=[^;,\s]+/i)?.[0] ?? null;
-}
-
 function isValidUpstreamPayload(payload: unknown): boolean {
 	return isRecord(payload) && payload.status !== false && Object.hasOwn(payload, "data");
 }
 
-function stalePayload(entry: CacheEntry, queueStatus: "waiting_room" | "upstream_unavailable"): unknown {
+function stalePayload(entry: CacheEntry): unknown {
 	if (!isRecord(entry.payload)) {
 		return {
 			data: entry.payload,
 			isStale: true,
 			lastUpdated: entry.cachedAt,
-			queueStatus,
+			queueStatus: "upstream_unavailable",
 			status: true,
 		};
 	}
@@ -168,90 +127,21 @@ function stalePayload(entry: CacheEntry, queueStatus: "waiting_room" | "upstream
 		...entry.payload,
 		isStale: true,
 		lastUpdated: entry.cachedAt,
-		queueStatus,
+		queueStatus: "upstream_unavailable",
 	};
-}
-
-export class WaitingRoomCoordinator extends DurableObject<Env> {
-	private waitingRoomState: WaitingRoomState | null = null;
-	private cookie: CookieEntry | null = null;
-
-	constructor(ctx: DurableObjectState, env: Env) {
-		super(ctx, env);
-		ctx.blockConcurrencyWhile(async () => {
-			const [waitingRoomState, cookie] = await Promise.all([
-				this.ctx.storage.get<WaitingRoomState>("waiting-room-state"),
-				this.ctx.storage.get<CookieEntry>("waiting-room-cookie"),
-			]);
-			this.waitingRoomState = waitingRoomState ?? null;
-			this.cookie = cookie ?? null;
-		});
-	}
-
-	async beginRequest(): Promise<{ allowed: boolean; cookie: string | null; generation: number | null }> {
-		const cookie = this.cookie && ageInSeconds(this.cookie.cachedAt) < COOKIE_TTL_SECONDS ? this.cookie.value : null;
-		if (!this.waitingRoomState) {
-			return { allowed: true, cookie, generation: null };
-		}
-
-		if (Date.now() < Date.parse(this.waitingRoomState.nextProbeAt)) {
-			return { allowed: false, cookie, generation: this.waitingRoomState.generation };
-		}
-
-		this.waitingRoomState.nextProbeAt = new Date(
-			Date.now() + WAITING_ROOM_PROBE_INTERVAL_SECONDS * 1000,
-		).toISOString();
-		await this.ctx.storage.put("waiting-room-state", this.waitingRoomState);
-		return { allowed: true, cookie, generation: this.waitingRoomState.generation };
-	}
-
-	async reportWaiting(cookieValue: string | null): Promise<void> {
-		const now = new Date();
-		this.waitingRoomState = {
-			detectedAt: this.waitingRoomState?.detectedAt ?? now.toISOString(),
-			generation: (this.waitingRoomState?.generation ?? 0) + 1,
-			nextProbeAt: new Date(now.getTime() + WAITING_ROOM_PROBE_INTERVAL_SECONDS * 1000).toISOString(),
-		};
-		await this.ctx.storage.put("waiting-room-state", this.waitingRoomState);
-		if (cookieValue) {
-			this.cookie = { cachedAt: now.toISOString(), value: cookieValue };
-			await this.ctx.storage.put("waiting-room-cookie", this.cookie);
-		}
-	}
-
-	async reportFresh(generation: number, cookieValue: string | null): Promise<void> {
-		if (!this.waitingRoomState || this.waitingRoomState.generation !== generation) {
-			return;
-		}
-
-		this.waitingRoomState = null;
-		await this.ctx.storage.delete("waiting-room-state");
-		if (cookieValue) {
-			this.cookie = { cachedAt: new Date().toISOString(), value: cookieValue };
-			await this.ctx.storage.put("waiting-room-cookie", this.cookie);
-		}
-	}
 }
 
 export class UpstreamCoordinator extends DurableObject<Env> {
 	private snapshot: CacheEntry | null = null;
 	private kvSnapshotAt: string | null = null;
-	private waitingRoomState: WaitingRoomState | null = null;
-	private cookie: CookieEntry | null = null;
 	private inFlight: Promise<CoordinatorResult> | null = null;
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
 		ctx.blockConcurrencyWhile(async () => {
-			const [snapshot, waitingRoomState, cookie] = await Promise.all([
-				this.ctx.storage.get<CacheEntry>("snapshot"),
-				this.ctx.storage.get<WaitingRoomState>("waiting-room-state"),
-				this.ctx.storage.get<CookieEntry>("waiting-room-cookie"),
-			]);
+			const snapshot = await this.ctx.storage.get<CacheEntry>("snapshot");
 			this.snapshot = snapshot ?? null;
 			this.kvSnapshotAt = snapshot?.cachedAt ?? null;
-			this.waitingRoomState = waitingRoomState ?? null;
-			this.cookie = cookie ?? null;
 		});
 	}
 
@@ -264,10 +154,6 @@ export class UpstreamCoordinator extends DurableObject<Env> {
 		if (!this.snapshot) {
 			this.snapshot = await this.getKvSnapshot(pathname);
 			this.kvSnapshotAt = this.snapshot?.cachedAt ?? null;
-		}
-
-		if (this.waitingRoomState && Date.now() < Date.parse(this.waitingRoomState.nextProbeAt)) {
-			return this.fallback("waiting_room");
 		}
 
 		if (this.snapshot && ageInSeconds(this.snapshot.cachedAt) < LIVE_REFRESH_INTERVAL_SECONDS) {
@@ -287,45 +173,21 @@ export class UpstreamCoordinator extends DurableObject<Env> {
 	}
 
 	private async refresh(pathname: string, upstreamUrl: string): Promise<CoordinatorResult> {
-		const wasWaiting = this.waitingRoomState !== null;
-		const waitingRoom = wasWaiting ? this.env.WAITING_ROOM_COORDINATOR.getByName("jkt48-api") : null;
-		const access = waitingRoom
-			? await waitingRoom.beginRequest()
-			: {
-					allowed: true,
-					cookie: this.cookie && ageInSeconds(this.cookie.cachedAt) < COOKIE_TTL_SECONDS ? this.cookie.value : null,
-					generation: null,
-				};
-
-		if (!access.allowed) {
-			await this.deferWaitingRoomProbe();
-			return this.fallback("waiting_room");
-		}
-
 		try {
 			const headers = new Headers(REQUEST_HEADERS);
-			if (access.cookie) {
-				headers.set("Cookie", access.cookie);
-			}
 
 			const upstream = await fetch(upstreamUrl, {
 				headers,
 				method: "GET",
 				signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
 			});
-			const waitingRoomCookie = extractWaitingRoomCookie(upstream);
 			const bodyText = await upstream.text();
-			if (isWaitingRoomResponse(upstream, bodyText)) {
-				await this.enterWaitingRoom(waitingRoomCookie);
-				await this.persistSnapshot(pathname, true);
-				return this.fallback("waiting_room");
-			}
 
 			let payload: unknown;
 			try {
 				payload = JSON.parse(bodyText) as unknown;
 			} catch {
-				return this.fallback("upstream_unavailable", "JKT48 upstream returned a non-JSON payload.");
+				return this.fallback("JKT48 upstream returned a non-JSON payload.");
 			}
 
 			if (upstream.status >= 400 && upstream.status < 500) {
@@ -333,65 +195,24 @@ export class UpstreamCoordinator extends DurableObject<Env> {
 			}
 
 			if (!upstream.ok || !isValidUpstreamPayload(payload)) {
-				return this.fallback("upstream_unavailable", "JKT48 upstream returned an invalid response.");
+				return this.fallback("JKT48 upstream returned an invalid response.");
 			}
 
 			this.snapshot = { cachedAt: new Date().toISOString(), payload };
-			await this.persistSnapshot(pathname, false);
-			if (wasWaiting && waitingRoom && access.generation !== null) {
-				await waitingRoom.reportFresh(access.generation, waitingRoomCookie);
-			}
-			if (wasWaiting) {
-				this.waitingRoomState = null;
-				await this.ctx.storage.delete("waiting-room-state");
-			}
-			if (waitingRoomCookie) {
-				this.cookie = { cachedAt: new Date().toISOString(), value: waitingRoomCookie };
-				await this.ctx.storage.put("waiting-room-cookie", this.cookie);
-			}
+			await this.persistSnapshot(pathname);
 
 			return { body: payload, status: 200 };
 		} catch {
-			return this.fallback("upstream_unavailable", "Failed to reach the JKT48 upstream API.");
+			return this.fallback("Failed to reach the JKT48 upstream API.");
 		}
 	}
 
-	private async enterWaitingRoom(cookieValue: string | null): Promise<void> {
-		const now = new Date();
-		this.waitingRoomState = {
-			detectedAt: this.waitingRoomState?.detectedAt ?? now.toISOString(),
-			generation: (this.waitingRoomState?.generation ?? 0) + 1,
-			nextProbeAt: new Date(now.getTime() + WAITING_ROOM_PROBE_INTERVAL_SECONDS * 1000).toISOString(),
-		};
-		await this.ctx.storage.put("waiting-room-state", this.waitingRoomState);
-		if (cookieValue) {
-			this.cookie = { cachedAt: now.toISOString(), value: cookieValue };
-			await this.ctx.storage.put("waiting-room-cookie", this.cookie);
-		}
-		await this.env.WAITING_ROOM_COORDINATOR.getByName("jkt48-api").reportWaiting(cookieValue);
-	}
-
-	private async deferWaitingRoomProbe(): Promise<void> {
-		if (!this.waitingRoomState) {
-			return;
-		}
-		this.waitingRoomState.nextProbeAt = new Date(
-			Date.now() + WAITING_ROOM_PROBE_INTERVAL_SECONDS * 1000,
-		).toISOString();
-		await this.ctx.storage.put("waiting-room-state", this.waitingRoomState);
-	}
-
-	private fallback(
-		queueStatus: "waiting_room" | "upstream_unavailable",
-		message?: string,
-	): CoordinatorResult {
+	private fallback(message?: string): CoordinatorResult {
 		if (this.snapshot && ageInSeconds(this.snapshot.cachedAt) < SNAPSHOT_TTL_SECONDS) {
-			return { body: stalePayload(this.snapshot, queueStatus), status: 200 };
+			return { body: stalePayload(this.snapshot), status: 200 };
 		}
 
-		return queueStatus === "waiting_room"
-			? errorResult(503, "waiting_room", "Cloudflare Waiting Room is active.")
-			: errorResult(502, message?.includes("non-JSON") ? "upstream_invalid_json" : "upstream_fetch_failed", message ?? "Failed to reach the JKT48 upstream API.");
+		return errorResult(502, message?.includes("non-JSON") ? "upstream_invalid_json" : "upstream_fetch_failed", message ?? "Failed to reach the JKT48 upstream API.");
 	}
 
 	private async getKvSnapshot(pathname: string): Promise<CacheEntry | null> {
@@ -403,14 +224,14 @@ export class UpstreamCoordinator extends DurableObject<Env> {
 		}
 	}
 
-	private async persistSnapshot(pathname: string, force: boolean): Promise<void> {
+	private async persistSnapshot(pathname: string): Promise<void> {
 		if (!this.snapshot) {
 			return;
 		}
 
 		await this.ctx.storage.put("snapshot", this.snapshot);
 
-		if (!force && this.kvSnapshotAt && ageInSeconds(this.kvSnapshotAt) < SNAPSHOT_WRITE_INTERVAL_SECONDS) {
+		if (this.kvSnapshotAt && ageInSeconds(this.kvSnapshotAt) < SNAPSHOT_WRITE_INTERVAL_SECONDS) {
 			return;
 		}
 

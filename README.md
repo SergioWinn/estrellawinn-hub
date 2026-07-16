@@ -2,7 +2,7 @@
 
 GLOBAL EXCLUSIVE MONITOR is a full-stack web application designed to track JKT48 exclusive event availability in near real time through a fast, focused, and mobile-friendly interface. Instead of relying on repeated manual refreshes or raw upstream responses, the application reorganizes event sessions, member availability, and ticket movement into a view that is easier to scan during high-traffic sales periods.
 
-From a technical perspective, the project combines a responsive Next.js frontend with a lightweight Cloudflare Worker proxy that sits between the client and the upstream JKT48 API. This backend layer simplifies frontend data access while handling unstable upstream behavior such as waiting-room HTML responses, invalid JSON payloads, and temporary fetch failures. The result is a compact but practical product that emphasizes usability, resilience, and clear separation between presentation and data access.
+From a technical perspective, the project combines a responsive Next.js frontend with a lightweight Cloudflare Worker proxy that sits between the client and the upstream JKT48 API. This backend layer simplifies frontend data access while handling unstable upstream behavior such as invalid JSON payloads and temporary fetch failures. The result is a compact but practical product that emphasizes usability, resilience, and clear separation between presentation and data access.
 
 ## Why This Project
 
@@ -16,7 +16,7 @@ This project was built as a focused monitoring layer on top of that experience. 
 - Member-focused cards that highlight sold count, availability state, and direct purchase actions.
 - Responsive dashboard layout built for quick scanning on both desktop and mobile.
 - Lightweight Worker-based proxy that isolates the frontend from unstable upstream behavior.
-- Defensive handling for waiting room pages, invalid payloads, and transient upstream failures.
+- Defensive handling for invalid payloads and transient upstream failures.
 
 ## Tech Stack
 
@@ -39,7 +39,7 @@ This separation keeps the browser application simple while centralizing upstream
 - Session-based availability tracking across event slots
 - Member-centric status cards with visual state indicators
 - Theme-aware UI for a cleaner viewing experience
-- Fallback handling when the upstream service returns waiting room HTML instead of JSON
+- Cached snapshot fallback when live upstream data is temporarily unavailable
 
 ## Project Structure
 

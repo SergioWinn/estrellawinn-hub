@@ -26,10 +26,6 @@
 			{
 				"name": "UPSTREAM_COORDINATOR",
 				"class_name": "UpstreamCoordinator"
-			},
-			{
-				"name": "WAITING_ROOM_COORDINATOR",
-				"class_name": "WaitingRoomCoordinator"
 			}
 		]
 	},
@@ -37,6 +33,10 @@
 		{
 			"tag": "v1",
 			"new_sqlite_classes": ["UpstreamCoordinator", "WaitingRoomCoordinator"]
+		},
+		{
+			"tag": "v2",
+			"deleted_classes": ["WaitingRoomCoordinator"]
 		}
 	],
 	"triggers": {

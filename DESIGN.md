@@ -92,7 +92,7 @@ components:
 
 **Creative North Star: "Night Signal Board"**
 
-This system is a dark-first monitoring board for people checking volatile availability under time pressure. The interface should feel like a signal surface that has already filtered the noise: fast to scan, firm in contrast, and precise about which states are actionable, stale, queued, sold, or closed. The light theme is a true inverse of the same product, not a second identity.
+This system is a dark-first monitoring board for people checking volatile availability under time pressure. The interface should feel like a signal surface that has already filtered the noise: fast to scan, firm in contrast, and precise about which states are actionable, stale, unavailable, sold, or closed. The light theme is a true inverse of the same product, not a second identity.
 
 The personality is controlled rather than ornamental. Lilac, mint, amber, rose, and mauve behave like operational indicators inside a disciplined frame. Dense data is welcome when it improves decision speed. Decorative drift is not. The system explicitly rejects speculative-finance theatrics, fandom scrapbook softness, and enterprise gray bureaucracy.
 
@@ -101,7 +101,7 @@ The personality is controlled rather than ornamental. Lilac, mint, amber, rose, 
 - Saturated state colors used as signal lights, not broad decoration.
 - Rounded controls and tiles with disciplined spacing and strong touch targets.
 - Dense but readable layouts built for repeated scanning on mobile and desktop.
-- Resilient product states for loading, waiting room, stale data, and empty results.
+- Resilient product states for loading, stale data, upstream failures, and empty results.
 
 ## 2. Colors
 
@@ -116,7 +116,7 @@ The palette acts like a bank of monitored signals. Identity stays concentrated i
 
 ### Operational States
 - **Availability Mint** (`#5fd1a5`): tickets still open and actionable.
-- **Queue Amber** (`#e0ba72`): queue pressure, waiting room, or low-stock urgency.
+- **Warning Amber** (`#e0ba72`): stale data, temporary upstream failures, or low-stock urgency.
 - **Sold Rose** (`#d66379`): sold out and hard failure states.
 - **Offline Mauve** (`#8e84a9`): closed, expired, or no-longer-actionable states.
 
@@ -181,7 +181,7 @@ Filters behave like compact control-room instruments.
 
 ### Alerts and Status Banners
 Operational messaging is explicit and state-colored.
-- **Waiting room / stale data:** amber-bordered banner with a direct retry action.
+- **Stale data:** amber-bordered banner with a direct retry action.
 - **Failure:** rose-bordered banner with compact explanatory copy.
 - **Info states:** lilac-tinted surfaces for search and filter confirmations.
 

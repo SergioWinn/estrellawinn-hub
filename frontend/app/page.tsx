@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from "swr";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { MemberCard, type MemberCardViewModel } from "@/src/components/MemberCard";
 import { getInitialTheme, resolveTheme } from "./theme";
@@ -104,15 +104,11 @@ interface ErrorResponsePayload {
 type ThemeMode = "dark" | "light";
 
 class ApiError extends Error {
-	errorStatus?: string;
-	isWaitingRoom: boolean;
 	statusCode?: number;
 
-	constructor(message: string, statusCode?: number, errorStatus?: string) {
+	constructor(message: string, statusCode?: number) {
 		super(message);
 		this.name = "ApiError";
-		this.errorStatus = errorStatus;
-		this.isWaitingRoom = errorStatus === "waiting_room";
 		this.statusCode = statusCode;
 	}
 }
@@ -137,11 +133,6 @@ const FOCUSED_POLLING = {
 	shouldRetryOnError: false,
 } as const;
 
-const WAITING_ROOM_POLLING = {
-	...FOCUSED_POLLING,
-	refreshInterval: 20000,
-} as const;
-
 const LIVE_DETAIL_POLLING = {
 	...FOCUSED_POLLING,
 	refreshInterval: 5000,
@@ -159,26 +150,6 @@ function parseJsonPayload<T>(bodyText: string): (T & ErrorResponsePayload) | nul
 	} catch {
 		return null;
 	}
-}
-
-function looksLikeWaitingRoomResponse(response: Response, bodyText: string, payload: ErrorResponsePayload | null): boolean {
-	const bodyLower = bodyText.toLowerCase();
-	const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
-	const statusLabel = typeof payload?.status === "string" ? payload.status.toLowerCase() : "";
-	const errorLabel = typeof payload?.error === "string" ? payload.error.toLowerCase() : "";
-
-	if (statusLabel === "waiting_room" || errorLabel === "waiting_room") {
-		return true;
-	}
-
-	return (
-		(contentType.includes("text/html") || bodyLower.includes("<html") || bodyLower.includes("<!doctype")) &&
-		(bodyLower.includes("waiting room") || bodyLower.includes("cloudflare") || bodyLower.includes("cf-waitingroom"))
-	);
-}
-
-function isWaitingRoomError(error: unknown): boolean {
-	return error instanceof ApiError && error.isWaitingRoom;
 }
 
 function getNowWib(): Date {
@@ -587,17 +558,6 @@ export default function Page() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [availableOnly, setAvailableOnly] = useState(false);
 	const [isRetrying, setIsRetrying] = useState(false);
-	const [waitingRoomActive, setWaitingRoomActive] = useState(false);
-	const stalePathsRef = useRef(new Set<string>());
-	const pollingOptions = waitingRoomActive ? WAITING_ROOM_POLLING : FOCUSED_POLLING;
-	const setPathStale = (path: string, isStale: boolean) => {
-		if (isStale) {
-			stalePathsRef.current.add(path);
-		} else {
-			stalePathsRef.current.delete(path);
-		}
-		setWaitingRoomActive(stalePathsRef.current.size > 0);
-	};
 
 	const fetcher = async <T,>(path: string): Promise<T> => {
 		const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -606,39 +566,20 @@ export default function Page() {
 		const bodyText = await response.text();
 		const payload = parseJsonPayload<T>(bodyText);
 
-		if (looksLikeWaitingRoomResponse(response, bodyText, payload)) {
-			setPathStale(path, true);
-			throw new ApiError(payload?.message ?? "Cloudflare Waiting Room is active.", 503, "waiting_room");
-		}
-
 		if (!payload) {
 			throw new ApiError("Worker returned a non-JSON response.", response.status);
 		}
 
 		if (!response.ok || payload.status === false) {
+			const responseStatus = typeof payload.status === "string" ? payload.status : undefined;
 			throw new ApiError(
-				payload.message ?? (typeof payload.error === "string" ? payload.error : "Request failed"),
+				responseStatus === "waiting_room"
+					? "Live data is temporarily unavailable."
+					: payload.message ?? (typeof payload.error === "string" ? payload.error : "Request failed"),
 				response.status,
-				typeof payload.status === "string" ? payload.status : undefined,
 			);
 		}
 
-		if (payload.queueStatus === "waiting_room") {
-			setPathStale(path, true);
-		} else {
-			setPathStale(path, false);
-			if (path === "/exclusives") {
-				const data = parseJsonPayload<ApiEnvelope<ExclusiveListItem[] | { data?: ExclusiveListItem[] }>>(bodyText)?.data;
-				const list = Array.isArray(data) ? data : data?.data ?? [];
-				const activeDetailPaths = new Set(list.flatMap((event) => (event.code ? [`/exclusives/${event.code}`] : [])));
-				for (const stalePath of stalePathsRef.current) {
-					if (stalePath.startsWith("/exclusives/") && !activeDetailPaths.has(stalePath)) {
-						stalePathsRef.current.delete(stalePath);
-					}
-				}
-				setWaitingRoomActive(stalePathsRef.current.size > 0);
-			}
-		}
 		return payload;
 	};
 
@@ -647,20 +588,20 @@ export default function Page() {
 		error: membersError,
 		isLoading: membersLoading,
 		mutate: mutateMembers,
-	} = useSWR<ApiEnvelope<MemberRecord[]>>("/members", fetcher, pollingOptions);
+	} = useSWR<ApiEnvelope<MemberRecord[]>>("/members", fetcher, FOCUSED_POLLING);
 	const {
 		data: codesResponse,
 		error: codesError,
 		isLoading: codesLoading,
 		mutate: mutateCodes,
-	} = useSWR<ApiEnvelope<ExclusiveListItem[] | { data?: ExclusiveListItem[] }>>("/exclusives", fetcher, pollingOptions);
+	} = useSWR<ApiEnvelope<ExclusiveListItem[] | { data?: ExclusiveListItem[] }>>("/exclusives", fetcher, FOCUSED_POLLING);
 
 	const {
 		data: eventsResponse,
 		error: eventsError,
 		isLoading: eventsLoading,
 		mutate: mutateEvents,
-	} = useSWR<ApiEnvelope<EventDetail[]>>("/exclusive-snapshots", fetcher, pollingOptions);
+	} = useSWR<ApiEnvelope<EventDetail[]>>("/exclusive-snapshots", fetcher, FOCUSED_POLLING);
 	const eventsData = eventsResponse?.data;
 
 	const categories = useMemo(() => {
@@ -706,7 +647,7 @@ export default function Page() {
 		activeEventCode ? `/exclusives/${activeEventCode}` : null,
 		fetcher,
 		{
-			...(waitingRoomActive ? WAITING_ROOM_POLLING : LIVE_DETAIL_POLLING),
+			...LIVE_DETAIL_POLLING,
 			onSuccess: (payload) => {
 				if (!activeEventCode) {
 					return;
@@ -854,26 +795,19 @@ export default function Page() {
 		membersResponse?.isStale || codesResponse?.isStale || eventsResponse?.isStale || detailSWR.data?.isStale,
 	);
 	const activeCategoryLabel = CATEGORY_LABELS[currentEvent?.category ?? ""] ?? (currentEvent?.category ?? "-").replaceAll("_", " ");
-	const workerWaitingRoom = waitingRoomActive || isWaitingRoomError(pageError) || isWaitingRoomError(detailError);
-	const workerErrorMessage = workerWaitingRoom
-		? `Showing the latest cached data${staleMinutesAgo ? ` (${staleMinutesAgo})` : ""}. The upstream queue is active.`
-		: hasStaleData
+	const workerErrorMessage = hasStaleData
 			? `Showing the latest cached data${staleMinutesAgo ? ` (${staleMinutesAgo})` : ""}. Live data is temporarily unavailable.`
 			: pageError
 				? `Failed to load worker data. ${String(pageError.message)}`
 				: detailError
 					? `Unable to refresh live data. ${String(detailError.message)}`
 					: null;
-	const statusSummaryLabel = workerWaitingRoom
-		? "Waiting room"
-		: hasStaleData
+	const statusSummaryLabel = hasStaleData
 			? "Cached snapshot"
 			: detailError || pageError
 			? "Recovery mode"
 			: "Live monitoring";
-	const statusDetailLabel = workerWaitingRoom
-		? `Retries every 60s${staleMinutesAgo ? ` · cached ${staleMinutesAgo}` : ""}`
-		: hasStaleData
+	const statusDetailLabel = hasStaleData
 			? `Checks every 30s${staleMinutesAgo ? ` · cached ${staleMinutesAgo}` : ""}`
 			: lastUpdatedWib
 				? `Selected event checks every 5s · synced ${formatTime(lastUpdatedWib)} WIB`
@@ -887,8 +821,6 @@ export default function Page() {
 		}
 
 		setIsRetrying(true);
-		stalePathsRef.current.clear();
-		setWaitingRoomActive(false);
 		try {
 			await Promise.allSettled([mutateMembers(), mutateCodes(), mutateEvents(), mutateDetail()]);
 		} finally {
@@ -905,7 +837,7 @@ export default function Page() {
 							GLOBAL EXCLUSIVE MONITOR
 						</h1>
 						<p className="mt-2 max-w-[62ch] text-base font-medium leading-6 text-[var(--text-muted)]">
-							Track which JKT48 exclusive sessions are still actionable without digging through queue-heavy upstream pages.
+							Track which JKT48 exclusive sessions are still actionable without repeatedly checking upstream pages.
 						</p>
 					</div>
 					<div className="flex justify-end sm:shrink-0">
@@ -985,16 +917,16 @@ export default function Page() {
 								Tako
 							</a>
 						</div>
-						{workerWaitingRoom || hasStaleData || detailError || pageError ? (
+						{hasStaleData || detailError || pageError ? (
 							<button
 								aria-busy={isRetrying}
 								className="ml-auto inline-flex min-h-10 items-center rounded-full border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] transition hover:bg-[color:var(--surface-soft)]"
-								data-state={isRetrying ? "loading" : workerWaitingRoom || hasStaleData || detailError || pageError ? "error" : "default"}
+								data-state={isRetrying ? "loading" : hasStaleData || detailError || pageError ? "error" : "default"}
 								onClick={retryAll}
 								disabled={isRetrying}
 								type="button"
 							>
-								{isRetrying ? "Refreshing…" : workerWaitingRoom || hasStaleData ? "Retry refresh" : "Refresh data"}
+								{isRetrying ? "Refreshing…" : hasStaleData ? "Retry refresh" : "Refresh data"}
 							</button>
 						) : null}
 					</div>
@@ -1005,13 +937,13 @@ export default function Page() {
 				<div
 					aria-live="polite"
 					className={`mb-4 rounded-2xl p-4 text-sm ${
-						workerWaitingRoom || hasStaleData
+						hasStaleData
 							? "border border-[var(--warn)] bg-[color:var(--warn-soft)] text-[var(--warn-text)]"
 							: "border border-[var(--sold)] bg-[color:var(--sold-soft)] text-[var(--sold-text)]"
 					}`}
 				>
 					<div>
-							{workerWaitingRoom ? <AlertIcon className="mr-2 inline size-4 align-[-2px]" /> : null}
+							<AlertIcon className="mr-2 inline size-4 align-[-2px]" />
 							{workerErrorMessage}
 					</div>
 				</div>
