@@ -791,8 +791,12 @@ export default function Page() {
 	const pageError = membersError ?? codesError ?? eventsError;
 	const detailError = detailSWR.error;
 	const isLoading = membersLoading || codesLoading || eventsLoading;
+	const hasFreshActiveDetail = Boolean(detailSWR.data && !detailSWR.data.isStale);
 	const hasStaleData = Boolean(
-		membersResponse?.isStale || codesResponse?.isStale || eventsResponse?.isStale || detailSWR.data?.isStale,
+		membersResponse?.isStale ||
+		codesResponse?.isStale ||
+		detailSWR.data?.isStale ||
+		(eventsResponse?.isStale && !hasFreshActiveDetail),
 	);
 	const activeCategoryLabel = CATEGORY_LABELS[currentEvent?.category ?? ""] ?? (currentEvent?.category ?? "-").replaceAll("_", " ");
 	const workerErrorMessage = hasStaleData
